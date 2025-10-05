@@ -7,32 +7,41 @@ const micStatus = document.getElementById('micStatus');
 const buttons = document.querySelector('.buttons');
 const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-// Elemen Menu Burger
+// Elemen Menu Burger dan Overlay (PERBAIKAN)
 const burgerMenuBtn = document.getElementById('burgerMenu');
 const historyPanel = document.getElementById('historyPanel');
+const overlay = document.getElementById('overlay'); // Ambil elemen overlay
 
 let currentExpression = '0';
 let lastResult = null;
 let historyRecords = [];
 
 // =================================================================
-// PENJELASAN FUNGSI MOD
+// LOGIKA MENU BURGER & HISTORY PANEL (FUNGSI PERBAIKAN)
 // =================================================================
-/*
- * Tombol MOD (Modulus) digunakan untuk mencari SISA DARI PEMBAGIAN.
- * Contoh: 10 MOD 3 = 1 (karena 10 dibagi 3 adalah 3 sisa 1)
- * Contoh: 20 MOD 5 = 0 (karena 20 habis dibagi 5)
- * Dalam JavaScript, simbol untuk Modulus adalah '%'.
- */
 
-// =================================================================
-// LOGIKA MENU BURGER & HISTORY PANEL
-// =================================================================
+function toggleHistoryPanel(isOpen) {
+    if (isOpen) {
+        historyPanel.classList.add('open');
+        overlay.classList.add('active');
+    } else {
+        historyPanel.classList.remove('open');
+        overlay.classList.remove('active');
+    }
+}
 
 burgerMenuBtn.addEventListener('click', () => {
-    historyPanel.classList.toggle('open');
+    // Toggle status panel. Jika panel sedang terbuka, tutup, sebaliknya buka.
+    const isCurrentlyOpen = historyPanel.classList.contains('open');
+    toggleHistoryPanel(!isCurrentlyOpen);
 });
 
+// Tutup panel jika overlay diklik
+overlay.addEventListener('click', () => {
+    toggleHistoryPanel(false);
+});
+
+// ... (Fungsi renderHistory, addToHistory, dan clearHistoryBtn.addEventListener sama)
 function renderHistory() {
     historyListEl.innerHTML = '';
     
@@ -55,7 +64,7 @@ function renderHistory() {
             historyCurrentEl.textContent = record.expression + ' =';
             lastResult = record.result;
             updateDisplay();
-            historyPanel.classList.remove('open'); // Tutup panel setelah memilih
+            toggleHistoryPanel(false); // Tutup panel setelah memilih
         });
 
         historyListEl.appendChild(item);
@@ -74,8 +83,9 @@ clearHistoryBtn.addEventListener('click', () => {
     renderHistory();
 });
 
+
 // =================================================================
-// LOGIKA KALKULATOR UTAMA
+// LOGIKA KALKULATOR UTAMA (Tidak ada perubahan signifikan)
 // =================================================================
 
 function updateDisplay() {
@@ -87,7 +97,6 @@ function calculate() {
     let expressionToCalculate = currentExpression;
 
     try {
-        // Mengganti simbol tampilan ('×' dan 'MOD') menjadi simbol perhitungan JavaScript ('*' dan '%')
         let expression = expressionToCalculate
             .replace(/×/g, '*')
             .replace(/MOD/g, '%');
@@ -100,7 +109,7 @@ function calculate() {
 
         let formattedResult = String(calculatedResult);
         
-        addToHistory(expressionToCalculate, formattedResult);
+        addToHistory(expressionToCalculate, formattedResult); // PENTING: Panggilan ke History
         
         historyCurrentEl.textContent = expressionToCalculate + ' =';
         lastResult = calculatedResult;
@@ -115,6 +124,7 @@ function calculate() {
 }
 
 function handleButton(value) {
+    // ... (Logika handleButton sama)
     if (value === 'clear') {
         currentExpression = '0';
         historyCurrentEl.textContent = '';
@@ -138,7 +148,6 @@ function handleButton(value) {
         }
     }
     
-    // Perbaikan tampilan operator *
     currentExpression = currentExpression.replace(/\*/g, '×');
 
     updateDisplay();
@@ -149,7 +158,7 @@ buttons.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn')) {
         const value = e.target.getAttribute('data-value');
         if (value === 'module') {
-             handleButton(' MOD '); // Tambahkan spasi untuk Modulus agar mudah di-parse
+             handleButton(' MOD ');
         } else {
              handleButton(value);
         }
@@ -157,7 +166,7 @@ buttons.addEventListener('click', (e) => {
 });
 
 // =================================================================
-// LOGIKA INPUT SUARA (WEB SPEECH API)
+// LOGIKA INPUT SUARA (Tidak ada perubahan signifikan)
 // =================================================================
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -199,7 +208,6 @@ if (SpeechRecognition) {
     micBtn.style.backgroundColor = '#ccc';
 }
 
-// FUNGSI PENGURAI PERINTAH SUARA
 function processVoiceCommand(command) {
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
@@ -221,7 +229,7 @@ function processVoiceCommand(command) {
 
     // 3. Menghapus perintah yang tidak perlu dan membersihkan spasi berlebih
     expression = expression.replace(/tolong hitung|hitung|berapa|hasilnya|adalah/g, '').trim();
-    expression = expression.replace(/\s+/g, ''); // Hapus semua spasi
+    expression = expression.replace(/\s+/g, '');
 
     // 4. Perintah Khusus (Hapus/Clear)
     if (expression.includes('hapus') || expression.includes('clear')) {
@@ -231,10 +239,9 @@ function processVoiceCommand(command) {
     
     // 5. Eksekusi Perhitungan
     if (expression.length > 0) {
-        // Mengganti * kembali ke × untuk tampilan
         currentExpression = expression.replace(/\*/g, '×').replace(/MOD/g, ' MOD '); 
         updateDisplay();
-        calculate(); // Langsung hitung
+        calculate();
     }
 }
 
