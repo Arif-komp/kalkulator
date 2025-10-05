@@ -1,7 +1,250 @@
-// ... (Logika kalkulator dan inisialisasi DOM elements) ...
+// =================================================================
+// INISIALISASI & FUNGSI INTI KALKULATOR
+// =================================================================
+
+// Inisialisasi DOM elements
+const resultEl = document.getElementById('result');
+const historyCurrentEl = document.getElementById('history-current');
+const historyListEl = document.getElementById('historyList');
+const micBtn = document.getElementById('micBtn');
+const buttons = document.querySelector('.buttons');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+const burgerMenuBtn = document.getElementById('burgerMenu');
+const historyPanel = document.getElementById('historyPanel');
+const overlay = document.getElementById('overlay'); 
+
+let currentExpression = '0';
+let lastResult = null;
+let historyRecords = [];
+
+
+/**
+ * Fungsi untuk menghitung faktorial (n!)
+ * @param {number} n 
+ */
+function factorial(n) {
+    if (n < 0) return NaN;
+    if (n === 0) return 1;
+    // Memastikan input adalah integer (penting untuk faktorial)
+    n = Math.floor(n); 
+    let result = 1;
+    for (let i = 2; i <= n; i++) {
+        result *= i;
+    }
+    return result;
+}
+
+/**
+ * Mengkonversi ekspresi yang mudah dibaca pengguna menjadi ekspresi JS yang dapat dievaluasi.
+ * @param {string} expression 
+ */
+function cleanExpression(expression) {
+    // 1. Ganti notasi tampilan ke notasi JavaScript
+    let cleaned = expression
+        .replace(/÷/g, '/')
+        .replace(/×/g, '*')
+        .replace(/MOD/g, '%')
+        .replace(/\^/g, '**');
+
+    // 2. Ganti fungsi/konstanta ramah-pengguna ke fungsi Math JavaScript
+    cleaned = cleaned
+        .replace(/sin\(/g, 'Math.sin(')
+        .replace(/cos\(/g, 'Math.cos(')
+        .replace(/tan\(/g, 'Math.tan(')
+        .replace(/log\(/g, 'Math.log10(') // Logaritma basis 10
+        .replace(/ln\(/g, 'Math.log(')    // Logaritma natural
+        .replace(/sqrt\(/g, 'Math.sqrt(')
+        .replace(/pi/g, 'Math.PI')
+        .replace(/e/g, 'Math.E');
+
+    // 3. Tangani faktorial (n!) menggunakan pola regex dan fungsi global
+    cleaned = cleaned.replace(/(\d+(\.\d+)?)!/g, (match, p1) => `factorial(${p1})`);
+    
+    return cleaned;
+}
+
+/**
+ * Memperbarui tampilan hasil di layar kalkulator.
+ */
+function updateDisplay() {
+    resultEl.textContent = currentExpression;
+    // Penyesuaian font size agar hasil panjang tetap terlihat
+    resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '4.5em';
+}
+
+/**
+ * Melakukan perhitungan ekspresi saat ini.
+ */
+function calculate() {
+    let expressionToCalculate = currentExpression;
+
+    // Menghindari perhitungan jika ekspresi hanya "Error" atau kosong
+    if (expressionToCalculate === '0' || expressionToCalculate === 'Error') return;
+
+    try {
+        const expression = cleanExpression(expressionToCalculate);
+        
+        // PENTING: Menggunakan new Function untuk eksekusi yang aman dan dapat mengakses fungsi global (seperti factorial)
+        let calculatedResult = (new Function('return ' + expression))();
+        
+        if (!isFinite(calculatedResult)) {
+             throw new Error("Invalid Calculation");
+        }
+
+        // Bulatkan hasil agar tidak terlalu panjang (maks. 10 digit desimal)
+        calculatedResult = parseFloat(calculatedResult.toFixed(10));
+        let formattedResult = String(calculatedResult);
+        
+        // Tambahkan ke riwayat sebelum mengubah currentExpression
+        addToHistory(expressionToCalculate, formattedResult); 
+        
+        historyCurrentEl.textContent = expressionToCalculate + ' =';
+        lastResult = calculatedResult;
+        currentExpression = formattedResult;
+        updateDisplay();
+
+    } catch (error) {
+        historyCurrentEl.textContent = expressionToCalculate + ' =';
+        currentExpression = 'Error';
+        lastResult = null;
+        updateDisplay();
+        console.error("Calculation Error:", error);
+    }
+}
+
+/**
+ * Menangani input dari setiap tombol yang diklik.
+ * @param {string} value - Nilai data-value dari tombol
+ */
+function handleButton(value) {
+    // 1. CLEAR
+    if (value === 'clear') {
+        currentExpression = '0';
+        historyCurrentEl.textContent = '';
+        lastResult = null;
+    // 2. EQUALS
+    } else if (value === '=') {
+        calculate();
+        return;
+    // 3. FAKTORIAL
+    } else if (value === 'fact') {
+         // Faktorial hanya bisa ditambahkan setelah angka atau tutup kurung
+         if (/[0-9)]/.test(currentExpression.slice(-1))) {
+             currentExpression += '!';
+         }
+    // 4. ANGKA DAN OPERATOR LAIN
+    } else {
+        // Jika hasil terakhir ada, tentukan apakah input baru adalah operator/fungsi atau angka baru
+        if (lastResult !== null && lastResult !== undefined) {
+             // Jika operator (termasuk MOD, ^, dan fungsi seperti sin()), gunakan hasil sebagai angka pertama
+             if (/[+\-*/ MOD()^]/.test(value) || value.includes('(')) {
+                currentExpression = String(lastResult) + value;
+            } else {
+                // Jika angka, mulai ekspresi baru
+                currentExpression = value;
+            }
+             lastResult = null;
+             historyCurrentEl.textContent = '';
+        } else {
+             // Jika ekspresi saat ini adalah '0', ganti kecuali inputnya adalah '.'
+             if (currentExpression === '0' && value !== '.') {
+                 currentExpression = value;
+             } else {
+                 currentExpression += value;
+             }
+        }
+    }
+    
+    // Pembersihan tampilan: Pastikan '×' dan '÷' yang disukai pengguna ada di tampilan
+    currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
+
+    updateDisplay();
+}
 
 // =================================================================
-// LOGIKA INPUT SUARA (Diperbarui untuk tampilan baru)
+// EVENT LISTENERS
+// =================================================================
+
+// Event listener untuk tombol keyboard di layar
+buttons.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn')) {
+        const value = e.target.getAttribute('data-value');
+        if (value === 'module') {
+             handleButton(' MOD '); // Beri spasi untuk modulus
+        } else {
+             handleButton(value);
+        }
+    }
+});
+
+
+// =================================================================
+// LOGIKA RIWAYAT & MENU
+// =================================================================
+
+function toggleHistoryPanel(isOpen) {
+    if (isOpen) {
+        historyPanel.classList.add('open');
+        overlay.classList.add('active');
+    } else {
+        historyPanel.classList.remove('open');
+        overlay.classList.remove('active');
+    }
+}
+
+burgerMenuBtn.addEventListener('click', () => {
+    const isCurrentlyOpen = historyPanel.classList.contains('open');
+    toggleHistoryPanel(!isCurrentlyOpen);
+});
+
+overlay.addEventListener('click', () => {
+    toggleHistoryPanel(false);
+});
+
+function renderHistory() {
+    historyListEl.innerHTML = '';
+    
+    if (historyRecords.length === 0) {
+        historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>';
+        return;
+    }
+
+    historyRecords.slice().reverse().forEach((record) => {
+        const item = document.createElement('div');
+        item.classList.add('history-item');
+        item.innerHTML = `
+            <div class="history-expression">${record.expression} =</div>
+            <div class="history-result">${record.result}</div>
+        `;
+
+        item.addEventListener('click', () => {
+            currentExpression = String(record.result);
+            historyCurrentEl.textContent = record.expression + ' =';
+            lastResult = record.result;
+            updateDisplay();
+            toggleHistoryPanel(false);
+        });
+
+        historyListEl.appendChild(item);
+    });
+}
+
+function addToHistory(expression, result) {
+    if (expression !== 'Error' && expression !== '0') {
+        historyRecords.push({ expression: expression, result: result });
+        renderHistory();
+    }
+}
+
+clearHistoryBtn.addEventListener('click', () => {
+    historyRecords = [];
+    renderHistory();
+});
+
+
+// =================================================================
+// LOGIKA INPUT SUARA
 // =================================================================
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -14,13 +257,11 @@ if (SpeechRecognition) {
     recognition.interimResults = false;
 
     recognition.onstart = () => {
-        // Mengganti teks dan menambahkan kelas untuk efek visual
         micBtn.textContent = 'Mendengarkan... 🔴';
         micBtn.classList.add('listening');
     };
 
     recognition.onend = () => {
-        // Mengembalikan teks dan menghapus kelas
         micBtn.textContent = 'Rekam';
         micBtn.classList.remove('listening');
     };
@@ -44,17 +285,16 @@ if (SpeechRecognition) {
         }
     });
 } else {
-    // Tampilkan pesan error jika API tidak didukung
     micBtn.textContent = 'API Suara TIDAK didukung browser ini.';
     micBtn.disabled = true;
     micBtn.style.backgroundColor = '#ccc';
 }
 
 function processVoiceCommand(command) {
-    // ... (Logika parsing perintah suara sama)
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
     
+    // 1. Mengganti kata-kata ilmiah dan operator ke format kalkulator
     expression = expression
         .replace(/akar kuadrat|akar/g, 'sqrt(')
         .replace(/pangkat/g, '^')
@@ -62,29 +302,31 @@ function processVoiceCommand(command) {
         .replace(/kosinus/g, 'cos(')
         .replace(/tangen/g, 'tan(')
         .replace(/logaritma/g, 'log(')
-        .replace(/faktorial/g, '!');
-        
-    expression = expression
+        .replace(/faktorial/g, '!')
         .replace(/tambah|plus/g, '+')
         .replace(/kurang|minus/g, '-')
         .replace(/kali|dikali|perkalian|x/g, '*')
         .replace(/bagi|dibagi|per/g, '/')
         .replace(/modulus|modulo|sisa bagi/g, ' MOD ');
 
+    // 2. Mengubah angka
     expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3');
     expression = expression.replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6');
     expression = expression.replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9');
     expression = expression.replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
+    // 3. Perintah Khusus
     if (expression.includes('hapus') || expression.includes('clear')) {
         handleButton('clear');
         return;
     }
     
+    // 4. Membersihkan dan Eksekusi
     expression = expression.replace(/tolong hitung|hitung|berapa|hasilnya|adalah/g, '').trim();
     expression = expression.replace(/\s+/g, '');
 
     if (expression.length > 0) {
+        // Mengubah notasi ke tampilan pengguna dan memasukkan ke ekspresi saat ini
         currentExpression = expression
             .replace(/\*/g, '×')
             .replace(/\//g, '÷')
@@ -92,13 +334,14 @@ function processVoiceCommand(command) {
             .replace(/MOD/g, ' MOD '); 
         
         updateDisplay();
-        calculate();
+        calculate(); // Langsung hitung hasil dari suara
     }
 }
 
-// ... (Sisa fungsi JavaScript: handleButton, calculate, dll. sama) ...
-// ... (Pastikan Anda menyalin ulang semua fungsi kalkulator di script.js) ...
 
-// Inisialisasi tampilan awal
-// updateDisplay();
-// renderHistory();
+// =================================================================
+// INISIALISASI
+// =================================================================
+
+updateDisplay();
+renderHistory();
