@@ -1,5 +1,5 @@
 // =================================================================
-// INISIALISASI & FUNGSI INTI KALKULATOR
+// INISIALISASI & FUNGSI INTI KALKULATOR (dengan Modifikasi Live Score)
 // =================================================================
 
 // Inisialisasi DOM elements
@@ -12,14 +12,14 @@ const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
 const burgerMenuBtn = document.getElementById('burgerMenu');
 const historyPanel = document.getElementById('historyPanel');
-const overlay = document.getElementById('overlay'); 
+const overlay = document.getElementById('overlay');
 
 let currentExpression = '0';
 let lastResult = null;
 let historyRecords = [];
-let isSolvingEquation = false; 
-let targetValue = null;         
-let inputNumber = null;         
+let isSolvingEquation = false;
+let targetValue = null;
+let inputNumber = null;
 
 
 /**
@@ -28,7 +28,7 @@ let inputNumber = null;
 function factorial(n) {
     if (n < 0) return NaN;
     if (n === 0) return 1;
-    n = Math.floor(n); 
+    n = Math.floor(n);
     let result = 1;
     for (let i = 2; i <= n; i++) {
         result *= i;
@@ -50,8 +50,8 @@ function cleanExpression(expression) {
         .replace(/sin\(/g, 'Math.sin(')
         .replace(/cos\(/g, 'Math.cos(')
         .replace(/tan\(/g, 'Math.tan(')
-        .replace(/log\(/g, 'Math.log10(') 
-        .replace(/ln\(/g, 'Math.log(')    
+        .replace(/log\(/g, 'Math.log10(')
+        .replace(/ln\(/g, 'Math.log(')
         .replace(/sqrt\(/g, 'Math.sqrt(')
         .replace(/pi/g, 'Math.PI')
         .replace(/e/g, 'Math.E');
@@ -69,8 +69,61 @@ function updateDisplay() {
     resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '4.5em';
 }
 
+// -------------------------------------------------------------
+// FUNGSI BARU: Pratinjau Perhitungan (Live Score)
+// -------------------------------------------------------------
+/**
+ * Melakukan perhitungan ekspresi saat ini dan menampilkannya di historyCurrentEl
+ * tanpa mengubah currentExpression atau historyRecords.
+ */
+function previewCalculation() {
+    let expressionToCalculate = currentExpression;
+
+    // Jangan tampilkan pratinjau jika ekspresi hanya "0"
+    if (expressionToCalculate === '0' || expressionToCalculate === 'Error') {
+        historyCurrentEl.textContent = '';
+        return;
+    }
+    
+    // Jangan pratinjau jika ekspresi berakhir dengan operator
+    if (/[+\-×÷ MOD\^]$/.test(expressionToCalculate)) {
+        historyCurrentEl.textContent = expressionToCalculate + '...';
+        return;
+    }
+
+    // Hanya preview untuk operasi standar (tidak termasuk kombinasi/tujuan)
+    if (isSolvingEquation) return; 
+
+    try {
+        const expression = cleanExpression(expressionToCalculate);
+        
+        // Coba evaluasi, jika ada error (misal: kurung belum ditutup), abaikan
+        let calculatedResult = (new Function('return ' + expression))();
+        
+        if (!isFinite(calculatedResult)) {
+            historyCurrentEl.textContent = 'Invalid Input';
+            return;
+        }
+
+        // Pembulatan standar untuk pratinjau
+        calculatedResult = parseFloat(calculatedResult.toFixed(10));
+        let formattedResult = String(calculatedResult);
+        
+        // Tampilkan pratinjau di elemen historyCurrentEl
+        historyCurrentEl.textContent = formattedResult;
+
+    } catch (error) {
+        // Abaikan error sintaks selama input (misal: "1+")
+        historyCurrentEl.textContent = expressionToCalculate + '...'; 
+    }
+}
+// -------------------------------------------------------------
+// AKHIR FUNGSI BARU
+// -------------------------------------------------------------
+
 /**
  * Melakukan perhitungan ekspresi saat ini.
+ * (Fungsi calculate() ini TETAP bertanggung jawab untuk hasil AKHIR dan RIWAYAT)
  */
 function calculate() {
     let expressionToCalculate = currentExpression;
@@ -90,7 +143,7 @@ function calculate() {
         // LOGIKA KOMBINASI DAN PEMBULATAN CERDAS
         // =========================================================
         let formattedResult;
-        let combinationDetails = null; 
+        let combinationDetails = null;
 
         if (isSolvingEquation && calculatedResult % 1 !== 0) {
             
@@ -109,9 +162,9 @@ function calculate() {
                 formattedResult = `${X}`; // Nilai X yang dibulatkan
 
                 combinationDetails = {
-                    X: X, 
-                    Y: Y, 
-                    finalExpression: finalExpression, 
+                    X: X,
+                    Y: Y,
+                    finalExpression: finalExpression,
                     target: targetValue,
                     operation: Y >= 0 ? '+' : '-'
                 };
@@ -124,18 +177,18 @@ function calculate() {
             }
             
             // Masukkan hasil ke riwayat
-            addToHistory(finalExpression, formattedResult, combinationDetails, calculatedResult); 
+            addToHistory(finalExpression, formattedResult, combinationDetails, calculatedResult);
 
         } else {
             // Logika standar untuk perhitungan langsung
             calculatedResult = parseFloat(calculatedResult.toFixed(10));
             formattedResult = String(calculatedResult);
-            addToHistory(expressionToCalculate, formattedResult, null, calculatedResult); 
+            addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
         }
         // =========================================================
 
         historyCurrentEl.textContent = expressionToCalculate + ' =';
-        lastResult = calculatedResult; 
+        lastResult = calculatedResult;
         
         // Tampilkan jawaban kombinasi di layar utama jika ada
         if (combinationDetails) {
@@ -163,6 +216,7 @@ function calculate() {
 
 /**
  * Menangani input dari setiap tombol yang diklik.
+ * TELAH DIMODIFIKASI untuk memanggil previewCalculation()
  */
 function handleButton(value) {
     // 1. CLEAR
@@ -170,8 +224,11 @@ function handleButton(value) {
         currentExpression = '0';
         historyCurrentEl.textContent = '';
         lastResult = null;
+        updateDisplay(); // Perlu updateDisplay di sini juga
+        return;
     // 2. EQUALS
     } else if (value === '=') {
+        // HANYA saat '=' ditekan, kita panggil calculate() yang akan menyimpan riwayat.
         calculate();
         return;
     // 3. FAKTORIAL
@@ -183,10 +240,10 @@ function handleButton(value) {
     } else {
         if (lastResult !== null && lastResult !== undefined) {
              if (/[+\-*/ MOD()^]/.test(value) || value.includes('(')) {
-                currentExpression = String(lastResult) + value;
-            } else {
-                currentExpression = value;
-            }
+                 currentExpression = String(lastResult) + value;
+             } else {
+                 currentExpression = value;
+             }
              lastResult = null;
              historyCurrentEl.textContent = '';
         } else {
@@ -198,21 +255,28 @@ function handleButton(value) {
         }
     }
     
+    // 5. Normalisasi tampilan
     currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
 
+    // Tampilkan ekspresi yang sedang diketik
     updateDisplay();
+    
+    // 6. Pratinjau hasil (Live Score)
+    // Panggil fungsi pratinjau setelah setiap tombol input (kecuali clear dan =)
+    previewCalculation(); 
 }
 
 // =================================================================
 // LOGIKA INPUT SUARA
 // =================================================================
 
+// ... (Kode untuk Speech Recognition tetap sama) ...
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
-    recognition.lang = 'id-ID'; 
+    recognition.lang = 'id-ID';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -271,9 +335,9 @@ function processVoiceCommand(command) {
 
     // 2. Mengubah angka dalam bentuk kata
     expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3')
-                        .replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6')
-                        .replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9')
-                        .replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
+                         .replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6')
+                         .replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9')
+                         .replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
     // 3. Perintah Khusus
     if (expression.includes('hapus') || expression.includes('clear')) {
@@ -295,12 +359,12 @@ function processVoiceCommand(command) {
 
         if (simpleFlexMatch) {
             // Untuk pola pendek: [Angka Input] [ke/buat/jadi] [Angka Target]
-            num1 = match[1]; 
-            num2 = match[4]; 
+            num1 = match[1];
+            num2 = match[4];
         } else {
              // Untuk pola panjang: [Angka Input] diapakan agar hasilnya [Angka Target]
-            num1 = match[1]; 
-            num2 = match[4]; 
+            num1 = match[1];
+            num2 = match[4];
         }
 
         // Atur variabel global untuk dipakai di fungsi calculate()
@@ -315,7 +379,7 @@ function processVoiceCommand(command) {
         historyCurrentEl.textContent = `Pencarian Kombinasi: ${command} -> ${solvedExpression}`;
         currentExpression = solvedExpression;
         updateDisplay();
-        calculate(); 
+        calculate();
         return;
     }
     
@@ -325,17 +389,16 @@ function processVoiceCommand(command) {
     
     if (cleanSpeech.length > 0) {
         currentExpression = cleanSpeech
-            .replace(/\*/g, '×').replace(/\//g, '÷').replace(/\^/g, '^').replace(/MOD/g, ' MOD '); 
+            .replace(/\*/g, '×').replace(/\//g, '÷').replace(/\^/g, '^').replace(/MOD/g, ' MOD ');
         
         updateDisplay();
-        calculate(); 
+        calculate();
     }
 }
 
 
 // =================================================================
 // LOGIKA RIWAYAT & MENU
-// (Tidak ada perubahan signifikan di sini)
 // =================================================================
 
 function toggleHistoryPanel(isOpen) {
@@ -374,8 +437,8 @@ function renderHistory() {
 
         // Tampilkan hasil kombinasi yang mudah dibaca
         if (record.combination) {
-             expressionText = record.combination.finalExpression;
-             resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'tambah' : 'kurang'} ${Math.abs(record.combination.Y)})`;
+              expressionText = record.combination.finalExpression;
+              resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'tambah' : 'kurang'} ${Math.abs(record.combination.Y)})`;
         }
         
         item.innerHTML = `
@@ -403,9 +466,9 @@ function renderHistory() {
 
 function addToHistory(expression, result, combination = null, originalResult = null) {
     if (expression !== 'Error' && expression !== '0') {
-        historyRecords.push({ 
-            expression: expression, 
-            result: result, 
+        historyRecords.push({
+            expression: expression,
+            result: result,
             combination: combination,
             originalResult: originalResult || result
         });
@@ -423,9 +486,9 @@ buttons.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn')) {
         const value = e.target.getAttribute('data-value');
         if (value === 'module') {
-             handleButton(' MOD '); 
+              handleButton(' MOD ');
         } else {
-             handleButton(value);
+              handleButton(value);
         }
     }
 });
