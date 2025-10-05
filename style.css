@@ -5,8 +5,9 @@
     --card-color: #ffffff;
     --text-color: #333;
     --operator-color: #ff9800;
+    --scientific-color: #4db6ac; /* Warna biru-hijau untuk fungsi ilmiah */
     --history-bg: #e8f5e9;
-    --history-width: 300px; /* Lebar panel riwayat */
+    --history-width: 300px;
 }
 
 body {
@@ -36,7 +37,7 @@ body {
     padding: 25px;
 }
 
-/* Header AYIIPP dan Burger Menu */
+/* Header dan Menu */
 .header {
     display: flex;
     align-items: center;
@@ -51,7 +52,6 @@ body {
     color: var(--primary-dark);
     margin-right: 15px;
     padding: 0;
-    /* Memberikan z-index agar burger menu selalu bisa diakses */
     position: relative; 
     z-index: 1001; 
 }
@@ -64,15 +64,72 @@ body {
     margin: 0;
 }
 
-/* Tombol Kalkulator dan lainnya (styling dihilangkan untuk brevity, asumsikan sudah benar) */
-/* ... */
+/* Tombol Kalkulator */
+.buttons {
+    /* 6 kolom untuk menampung tombol ilmiah dan operator */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.btn {
+    padding: 15px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background-color: #eceff1;
+    color: var(--text-color);
+    transition: background-color 0.2s;
+    font-weight: 500;
+}
+
+.num {
+    background-color: #ffffff; /* Angka lebih cerah */
+}
+
+.op {
+    background-color: #fff3e0;
+    color: var(--operator-color);
+    font-weight: bold;
+}
+
+.fn {
+    background-color: #e0f2f1;
+    color: var(--primary-dark);
+    font-weight: bold;
+}
+
+/* Tombol Ilmiah Baru */
+.sci {
+    background-color: var(--scientific-color);
+    color: white;
+    font-size: 1em;
+    font-weight: 500;
+}
+.sci:hover {
+    background-color: #00897b;
+}
+
+.eq {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.8em;
+    /* Mengambil ruang tombol + */
+    grid-column: 4;
+    grid-row: 9;
+}
+.buttons button[data-value="+"] {
+    /* Tombol + kini memiliki ukuran normal */
+    font-size: 1.4em;
+    font-weight: bold;
+}
 
 /* ================================================================= */
-/* HISTORY PANEL (SLIDE-OUT MENU) - PERBAIKAN FUNGSI */
+/* HISTORY PANEL & OVERLAY (Pastikan tetap sama dan berfungsi) */
 /* ================================================================= */
 
 .history-panel {
-    /* PENTING: Harus fixed untuk side menu yang tidak dipengaruhi scroll */
     position: fixed; 
     top: 0;
     right: 0; 
@@ -80,25 +137,18 @@ body {
     width: var(--history-width);
     background-color: var(--history-bg);
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-    /* Sembunyikan ke kanan */
     transform: translateX(100%); 
     transition: transform 0.3s ease-in-out;
     padding: 25px;
-    /* Z-index sangat penting agar panel berada di atas segalanya */
     z-index: 1000; 
     display: flex;
     flex-direction: column;
 }
 
 .history-panel.open {
-    /* Tampilkan */
     transform: translateX(0); 
 }
 
-/* Style Riwayat dan Clear Button (styling dihilangkan untuk brevity, asumsikan sudah benar) */
-/* ... */
-
-/* Overlay saat menu terbuka */
 .overlay {
     position: fixed;
     top: 0;
@@ -106,22 +156,21 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999; /* Di bawah panel, di atas kalkulator */
+    z-index: 999;
     opacity: 0;
-    pointer-events: none; /* Nonaktifkan klik saat tersembunyi */
+    pointer-events: none;
     transition: opacity 0.3s;
 }
 
 .overlay.active {
     opacity: 1;
-    pointer-events: auto; /* Aktifkan klik saat terlihat */
+    pointer-events: auto;
 }
 
-/* Responsif untuk layar kecil/ponsel */
 @media (max-width: 500px) {
     .main-container {
         max-width: none;
-        min-height: 100vh; /* Menggunakan min-height agar tetap full screen */
+        min-height: 100vh;
         border-radius: 0;
         box-shadow: none;
     }
