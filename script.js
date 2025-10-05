@@ -26,7 +26,6 @@ let historyRecords = [];
 function factorial(n) {
     if (n < 0) return NaN;
     if (n === 0) return 1;
-    // Memastikan input adalah integer (penting untuk faktorial)
     n = Math.floor(n); 
     let result = 1;
     for (let i = 2; i <= n; i++) {
@@ -58,7 +57,8 @@ function cleanExpression(expression) {
         .replace(/pi/g, 'Math.PI')
         .replace(/e/g, 'Math.E');
 
-    // 3. Tangani faktorial (n!) menggunakan pola regex dan fungsi global
+    // 3. Tangani faktorial (n!)
+    // Penting: Menggunakan regex untuk menangani angka integer atau float sebelum '!'
     cleaned = cleaned.replace(/(\d+(\.\d+)?)!/g, (match, p1) => `factorial(${p1})`);
     
     return cleaned;
@@ -69,7 +69,6 @@ function cleanExpression(expression) {
  */
 function updateDisplay() {
     resultEl.textContent = currentExpression;
-    // Penyesuaian font size agar hasil panjang tetap terlihat
     resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '4.5em';
 }
 
@@ -79,24 +78,21 @@ function updateDisplay() {
 function calculate() {
     let expressionToCalculate = currentExpression;
 
-    // Menghindari perhitungan jika ekspresi hanya "Error" atau kosong
     if (expressionToCalculate === '0' || expressionToCalculate === 'Error') return;
 
     try {
         const expression = cleanExpression(expressionToCalculate);
         
-        // PENTING: Menggunakan new Function untuk eksekusi yang aman dan dapat mengakses fungsi global (seperti factorial)
+        // PENTING: Menggunakan new Function untuk eksekusi yang aman dan dapat mengakses fungsi global (factorial)
         let calculatedResult = (new Function('return ' + expression))();
         
         if (!isFinite(calculatedResult)) {
              throw new Error("Invalid Calculation");
         }
 
-        // Bulatkan hasil agar tidak terlalu panjang (maks. 10 digit desimal)
         calculatedResult = parseFloat(calculatedResult.toFixed(10));
         let formattedResult = String(calculatedResult);
         
-        // Tambahkan ke riwayat sebelum mengubah currentExpression
         addToHistory(expressionToCalculate, formattedResult); 
         
         historyCurrentEl.textContent = expressionToCalculate + ' =';
@@ -129,25 +125,20 @@ function handleButton(value) {
         return;
     // 3. FAKTORIAL
     } else if (value === 'fact') {
-         // Faktorial hanya bisa ditambahkan setelah angka atau tutup kurung
          if (/[0-9)]/.test(currentExpression.slice(-1))) {
              currentExpression += '!';
          }
     // 4. ANGKA DAN OPERATOR LAIN
     } else {
-        // Jika hasil terakhir ada, tentukan apakah input baru adalah operator/fungsi atau angka baru
         if (lastResult !== null && lastResult !== undefined) {
-             // Jika operator (termasuk MOD, ^, dan fungsi seperti sin()), gunakan hasil sebagai angka pertama
              if (/[+\-*/ MOD()^]/.test(value) || value.includes('(')) {
                 currentExpression = String(lastResult) + value;
             } else {
-                // Jika angka, mulai ekspresi baru
                 currentExpression = value;
             }
              lastResult = null;
              historyCurrentEl.textContent = '';
         } else {
-             // Jika ekspresi saat ini adalah '0', ganti kecuali inputnya adalah '.'
              if (currentExpression === '0' && value !== '.') {
                  currentExpression = value;
              } else {
@@ -166,7 +157,7 @@ function handleButton(value) {
 // EVENT LISTENERS
 // =================================================================
 
-// Event listener untuk tombol keyboard di layar
+// Event listener untuk tombol di layar
 buttons.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn')) {
         const value = e.target.getAttribute('data-value');
@@ -294,7 +285,7 @@ function processVoiceCommand(command) {
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
     
-    // 1. Mengganti kata-kata ilmiah dan operator ke format kalkulator
+    // 1. Mengganti kata-kata ilmiah dan operator
     expression = expression
         .replace(/akar kuadrat|akar/g, 'sqrt(')
         .replace(/pangkat/g, '^')
@@ -326,7 +317,6 @@ function processVoiceCommand(command) {
     expression = expression.replace(/\s+/g, '');
 
     if (expression.length > 0) {
-        // Mengubah notasi ke tampilan pengguna dan memasukkan ke ekspresi saat ini
         currentExpression = expression
             .replace(/\*/g, '×')
             .replace(/\//g, '÷')
