@@ -2,7 +2,8 @@
 const resultEl = document.getElementById('result');
 const historyCurrentEl = document.getElementById('history-current');
 const historyListEl = document.getElementById('historyList');
-const micBtn = document.getElementById('micBtn');
+const micBtn = document.getElementById('micBtn'); // Hapus micStatus karena sudah digabungkan
+
 const buttons = document.querySelector('.buttons');
 const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
@@ -15,7 +16,7 @@ let lastResult = null;
 let historyRecords = [];
 
 // =================================================================
-// LOGIKA RIWAYAT & MENU (Sama seperti versi sebelumnya)
+// LOGIKA RIWAYAT & MENU (Sama seperti sebelumnya)
 // =================================================================
 
 function toggleHistoryPanel(isOpen) {
@@ -38,7 +39,6 @@ overlay.addEventListener('click', () => {
 });
 
 function renderHistory() {
-    // ... (Logika renderHistory sama)
     historyListEl.innerHTML = '';
     
     if (historyRecords.length === 0) {
@@ -80,7 +80,7 @@ clearHistoryBtn.addEventListener('click', () => {
 
 
 // =================================================================
-// LOGIKA KALKULATOR UTAMA (TERMASUK FUNGSI ILMIAH)
+// LOGIKA KALKULATOR UTAMA (Sama seperti sebelumnya)
 // =================================================================
 
 function factorial(n) {
@@ -94,27 +94,22 @@ function factorial(n) {
 }
 
 function cleanExpression(expression) {
-    // 1. Ganti notasi tampilan ke notasi JavaScript
     let cleaned = expression
         .replace(/÷/g, '/')
         .replace(/×/g, '*')
         .replace(/MOD/g, '%')
         .replace(/\^/g, '**');
 
-    // 2. Ganti fungsi/konstanta ramah-pengguna ke fungsi Math JavaScript
     cleaned = cleaned
         .replace(/sin\(/g, 'Math.sin(')
         .replace(/cos\(/g, 'Math.cos(')
         .replace(/tan\(/g, 'Math.tan(')
-        .replace(/log\(/g, 'Math.log10(') // Logaritma basis 10
-        .replace(/ln\(/g, 'Math.log(')    // Logaritma natural
+        .replace(/log\(/g, 'Math.log10(')
+        .replace(/ln\(/g, 'Math.log(')
         .replace(/sqrt\(/g, 'Math.sqrt(')
         .replace(/pi/g, 'Math.PI')
         .replace(/e/g, 'Math.E');
 
-    // 3. Tangani faktorial (n!)
-    // Ini adalah logika yang kompleks karena Math.eval() tidak tahu faktorial.
-    // Kita cari pola 'Angka!' atau ')'! dan menggantinya dengan fungsi faktorial buatan.
     cleaned = cleaned.replace(/(\d+)!/g, (match, p1) => `factorial(${p1})`);
     
     return cleaned;
@@ -129,20 +124,19 @@ function calculate() {
     let expressionToCalculate = currentExpression;
 
     try {
-        // PERBAIKAN: Sertakan fungsi factorial agar dapat digunakan oleh eval
         const expression = cleanExpression(expressionToCalculate);
         
+        // PENTING: Menggunakan new Function untuk menjalankan ekspresi yang rumit
         let calculatedResult = (new Function('return ' + expression))();
         
         if (!isFinite(calculatedResult)) {
              throw new Error("Invalid Calculation");
         }
 
-        // Bulatkan hasil agar tidak terlalu panjang (4 digit desimal)
         calculatedResult = parseFloat(calculatedResult.toFixed(10));
         let formattedResult = String(calculatedResult);
         
-        addToHistory(expressionToCalculate, formattedResult);
+        addToHistory(expressionToCalculate, formattedResult); 
         
         historyCurrentEl.textContent = expressionToCalculate + ' =';
         lastResult = calculatedResult;
@@ -157,6 +151,7 @@ function calculate() {
 }
 
 function handleButton(value) {
+    // ... (Logika handleButton sama)
     if (value === 'clear') {
         currentExpression = '0';
         historyCurrentEl.textContent = '';
@@ -165,12 +160,10 @@ function handleButton(value) {
         calculate();
         return;
     } else if (value === 'fact') {
-         // Tambahkan '!' ke akhir angka atau tutup kurung terakhir
          if (currentExpression !== '0') {
              currentExpression += '!';
          }
     } else {
-        // Logika untuk tombol angka dan fungsi setelah hasil
         if (currentExpression === '0' && value !== '.') {
             currentExpression = value;
         } else if (lastResult !== null && lastResult !== undefined) {
@@ -189,7 +182,6 @@ function handleButton(value) {
     updateDisplay();
 }
 
-// Event listener untuk tombol keyboard di layar
 buttons.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn')) {
         const value = e.target.getAttribute('data-value');
@@ -203,36 +195,57 @@ buttons.addEventListener('click', (e) => {
 
 
 // =================================================================
-// LOGIKA INPUT SUARA (Diperluas untuk fungsi ilmiah)
+// LOGIKA INPUT SUARA (PERUBAHAN TEKS TOMBOL)
 // =================================================================
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 
 if (SpeechRecognition) {
-    // ... (Konfigurasi SpeechRecognition sama)
     recognition = new SpeechRecognition();
     recognition.lang = 'id-ID'; 
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    recognition.onstart = () => { /* ... */ };
-    recognition.onend = () => { /* ... */ };
+    recognition.onstart = () => {
+        // Mengganti teks dan menambahkan kelas untuk efek visual
+        micBtn.textContent = 'Mendengarkan... 🔴';
+        micBtn.classList.add('listening');
+    };
+
+    recognition.onend = () => {
+        // Mengembalikan teks dan menghapus kelas
+        micBtn.textContent = '🎤 Tekan & Bicara';
+        micBtn.classList.remove('listening');
+    };
+
     recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript.toLowerCase();
         processVoiceCommand(transcript);
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Kesalahan Pengenalan Suara:", event.error);
+        micBtn.textContent = 'Error. Klik untuk coba lagi.';
+        micBtn.classList.remove('listening');
     };
 
     micBtn.addEventListener('click', () => {
         try {
             recognition.start();
         } catch (e) {
-            console.warn("Recognition already started or error in browser support.");
+            console.warn("Recognition already started or error in browser support.", e);
         }
     });
+} else {
+    // Tampilkan pesan error jika API tidak didukung
+    micBtn.textContent = 'API Suara TIDAK didukung browser ini.';
+    micBtn.disabled = true;
+    micBtn.style.backgroundColor = '#ccc';
 }
 
 function processVoiceCommand(command) {
+    // ... (Logika parsing perintah suara sama)
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
     
@@ -271,7 +284,6 @@ function processVoiceCommand(command) {
     expression = expression.replace(/\s+/g, '');
 
     if (expression.length > 0) {
-        // Mengubah notasi kembali ke yang disukai pengguna untuk ditampilkan
         currentExpression = expression
             .replace(/\*/g, '×')
             .replace(/\//g, '÷')
