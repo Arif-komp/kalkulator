@@ -4,8 +4,9 @@
     --background-color: #f4f7f6;
     --card-color: #ffffff;
     --text-color: #333;
-    --operator-color: #ff9800; /* Oranye untuk operator */
-    --history-bg: #e8f5e9; /* Latar belakang riwayat */
+    --operator-color: #ff9800;
+    --history-bg: #e8f5e9;
+    --history-width: 300px; /* Lebar panel riwayat */
 }
 
 body {
@@ -16,43 +17,51 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     box-sizing: border-box;
+    overflow-x: hidden; /* Mencegah scroll horizontal saat panel tersembunyi */
 }
 
 .main-container {
-    display: flex;
-    gap: 30px; /* Jarak antara kalkulator dan riwayat */
-    max-width: 900px; /* Lebar maksimum kontainer */
+    position: relative;
     width: 100%;
+    max-width: 450px; /* Fokus pada kalkulator */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-radius: 20px;
+    overflow: hidden;
 }
 
 .calculator {
     background-color: var(--card-color);
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-    width: 100%;
-    max-width: 400px;
     padding: 25px;
-    flex-shrink: 0; /* Mencegah kalkulator menyusut */
 }
 
-/* Header AYIIPP */
+/* Header AYIIPP dan Burger Menu */
 .header {
-    text-align: center;
+    display: flex;
+    align-items: center;
     margin-bottom: 20px;
+}
+
+.burger-menu {
+    background: none;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+    color: var(--primary-dark);
+    margin-right: 15px;
+    padding: 0;
 }
 
 .title {
     color: var(--primary-color);
     font-size: 2.2em;
     font-weight: 700;
-    letter-spacing: 5px;
+    letter-spacing: 4px;
     margin: 0;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Layar Tampilan */
+/* Tampilan */
 .display-container {
     background-color: #f0f0f0;
     border-radius: 10px;
@@ -76,7 +85,7 @@ body {
     min-height: 1.2em;
 }
 
-/* Input Suara */
+/* Tombol Input Suara */
 .voice-input {
     display: flex;
     gap: 10px;
@@ -93,11 +102,7 @@ body {
     border-radius: 8px;
     font-size: 1.1em;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
-}
-
-.mic-button:hover {
-    background-color: var(--primary-dark);
+    transition: background-color 0.3s;
 }
 
 .status {
@@ -107,7 +112,6 @@ body {
     color: var(--text-color);
     padding: 5px;
     border-radius: 5px;
-    transition: background-color 0.5s;
 }
 
 .listening {
@@ -131,11 +135,7 @@ body {
     cursor: pointer;
     background-color: #eceff1;
     color: var(--text-color);
-    transition: background-color 0.2s, transform 0.1s;
-}
-
-.btn:hover {
-    background-color: #cfd8dc;
+    transition: background-color 0.2s;
 }
 
 .op {
@@ -154,22 +154,30 @@ body {
     background-color: var(--primary-color);
     color: white;
     font-size: 1.8em;
-    grid-column: span 1;
 }
 
 /* ================================================================= */
-/* HISTORY PANEL STYLING */
+/* HISTORY PANEL (SLIDE-OUT MENU) */
 /* ================================================================= */
 
 .history-panel {
+    position: fixed;
+    top: 0;
+    right: 0; /* Mulai dari kanan */
+    height: 100%;
+    width: var(--history-width);
     background-color: var(--history-bg);
-    border-radius: 20px;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    transform: translateX(100%); /* Sembunyikan ke kanan */
+    transition: transform 0.3s ease-in-out;
     padding: 25px;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Pastikan di atas kalkulator */
     display: flex;
     flex-direction: column;
+}
+
+.history-panel.open {
+    transform: translateX(0); /* Tampilkan ke posisi nol */
 }
 
 .history-header {
@@ -189,23 +197,25 @@ body {
 #clearHistoryBtn {
     background: none;
     border: none;
-    color: var(--primary-dark);
+    color: #e53935; /* Warna merah untuk hapus */
     cursor: pointer;
-    opacity: 0.7;
+    opacity: 0.8;
     transition: opacity 0.2s;
+    padding: 5px;
+    border-radius: 5px;
 }
 
 #clearHistoryBtn:hover {
     opacity: 1;
+    background-color: #ffcdd2;
 }
 
 .history-list {
     flex-grow: 1;
-    overflow-y: auto; /* Scroll jika riwayat terlalu panjang */
+    overflow-y: auto;
     padding-right: 5px;
 }
 
-/* Style untuk setiap item riwayat */
 .history-item {
     padding: 10px 5px;
     border-bottom: 1px solid #ddd;
@@ -214,7 +224,7 @@ body {
 }
 
 .history-item:hover {
-    background-color: #e0e0e0;
+    background-color: #dcedc8; /* Warna hijau muda saat di-hover */
 }
 
 .history-expression {
@@ -234,31 +244,34 @@ body {
     margin-top: 50px;
 }
 
-/* ================================================================= */
-/* RESPONSIVE DESIGN */
-/* ================================================================= */
+/* Overlay saat menu terbuka (opsional, untuk menutup menu saat klik di luar) */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
 
-@media (max-width: 900px) {
+.overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Responsif untuk layar kecil/ponsel */
+@media (max-width: 500px) {
     .main-container {
-        flex-direction: column; /* Menumpuk kalkulator dan riwayat */
-        gap: 20px;
-        padding: 0;
-    }
-
-    .calculator, .history-panel {
         max-width: none;
-        width: auto;
+        height: 100vh;
         border-radius: 0;
         box-shadow: none;
     }
-    
-    .calculator {
-        min-height: 100vh;
-        padding-bottom: 40px;
-    }
-
     .history-panel {
-        /* Memastikan history panel tetap terlihat di bagian bawah */
-        padding-top: 15px; 
+        width: 80%; /* Riwayat mengambil 80% lebar layar */
     }
 }
