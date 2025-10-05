@@ -7,16 +7,33 @@ const micStatus = document.getElementById('micStatus');
 const buttons = document.querySelector('.buttons');
 const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
+// Elemen Menu Burger
+const burgerMenuBtn = document.getElementById('burgerMenu');
+const historyPanel = document.getElementById('historyPanel');
+
 let currentExpression = '0';
 let lastResult = null;
 let historyRecords = [];
 
 // =================================================================
-// LOGIKA RIWAYAT
+// PENJELASAN FUNGSI MOD
+// =================================================================
+/*
+ * Tombol MOD (Modulus) digunakan untuk mencari SISA DARI PEMBAGIAN.
+ * Contoh: 10 MOD 3 = 1 (karena 10 dibagi 3 adalah 3 sisa 1)
+ * Contoh: 20 MOD 5 = 0 (karena 20 habis dibagi 5)
+ * Dalam JavaScript, simbol untuk Modulus adalah '%'.
+ */
+
+// =================================================================
+// LOGIKA MENU BURGER & HISTORY PANEL
 // =================================================================
 
+burgerMenuBtn.addEventListener('click', () => {
+    historyPanel.classList.toggle('open');
+});
+
 function renderHistory() {
-    // Hapus konten lama
     historyListEl.innerHTML = '';
     
     if (historyRecords.length === 0) {
@@ -24,14 +41,9 @@ function renderHistory() {
         return;
     }
 
-    // Tampilkan riwayat terbaru di atas
-    historyRecords.slice().reverse().forEach((record, index) => {
+    historyRecords.slice().reverse().forEach((record) => {
         const item = document.createElement('div');
-        // Gunakan indeks asli untuk identifikasi (slice().reverse() mengacaukan indeks)
-        const originalIndex = historyRecords.length - 1 - index; 
-
         item.classList.add('history-item');
-        item.setAttribute('data-index', originalIndex);
         item.innerHTML = `
             <div class="history-expression">${record.expression} =</div>
             <div class="history-result">${record.result}</div>
@@ -43,6 +55,7 @@ function renderHistory() {
             historyCurrentEl.textContent = record.expression + ' =';
             lastResult = record.result;
             updateDisplay();
+            historyPanel.classList.remove('open'); // Tutup panel setelah memilih
         });
 
         historyListEl.appendChild(item);
@@ -50,7 +63,6 @@ function renderHistory() {
 }
 
 function addToHistory(expression, result) {
-    // Pastikan ekspresi valid sebelum disimpan
     if (expression !== 'Error' && expression !== '0') {
         historyRecords.push({ expression: expression, result: result });
         renderHistory();
@@ -68,34 +80,26 @@ clearHistoryBtn.addEventListener('click', () => {
 
 function updateDisplay() {
     resultEl.textContent = currentExpression;
-    // Mengatur ukuran font agar responsif
-    if (currentExpression.length > 15) {
-        resultEl.style.fontSize = '2em';
-    } else {
-        resultEl.style.fontSize = '3em';
-    }
+    resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '3em';
 }
 
 function calculate() {
     let expressionToCalculate = currentExpression;
 
     try {
-        // Mengganti MOD menjadi % dan simbol yang mudah diucapkan
+        // Mengganti simbol tampilan ('×' dan 'MOD') menjadi simbol perhitungan JavaScript ('*' dan '%')
         let expression = expressionToCalculate
             .replace(/×/g, '*')
             .replace(/MOD/g, '%');
             
-        // PENTING: eval() berpotensi tidak aman
         let calculatedResult = eval(expression);
 
-        // Memastikan hasil adalah angka, jika tidak, tampilkan error
         if (!isFinite(calculatedResult)) {
              throw new Error("Invalid Calculation");
         }
 
         let formattedResult = String(calculatedResult);
         
-        // Simpan ke Riwayat
         addToHistory(expressionToCalculate, formattedResult);
         
         historyCurrentEl.textContent = expressionToCalculate + ' =';
@@ -118,16 +122,13 @@ function handleButton(value) {
     } else if (value === '=') {
         calculate();
         return;
-    } else if (currentExpression === '0' && value !== '.') {
-        currentExpression = value;
     } else {
-        // Logika untuk melanjutkan operasi setelah hasil
-        if (lastResult !== null && lastResult !== undefined) {
-             // Jika tombol yang ditekan adalah operator, gunakan hasil sebagai awal ekspresi
-            if (/[+\-*/ MOD()]/.test(value)) {
+        if (currentExpression === '0' && value !== '.') {
+            currentExpression = value;
+        } else if (lastResult !== null && lastResult !== undefined) {
+             if (/[+\-*/ MOD()]/.test(value)) {
                 currentExpression = String(lastResult) + value;
             } else {
-                // Jika tombol yang ditekan adalah angka/titik, mulai ekspresi baru
                 currentExpression = value;
             }
              lastResult = null;
@@ -148,7 +149,7 @@ buttons.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn')) {
         const value = e.target.getAttribute('data-value');
         if (value === 'module') {
-             handleButton(' MOD ');
+             handleButton(' MOD '); // Tambahkan spasi untuk Modulus agar mudah di-parse
         } else {
              handleButton(value);
         }
@@ -185,10 +186,6 @@ if (SpeechRecognition) {
         processVoiceCommand(transcript);
     };
 
-    recognition.onerror = (event) => {
-        micStatus.textContent = 'Gagal: ' + event.error;
-    };
-
     micBtn.addEventListener('click', () => {
         try {
             recognition.start();
@@ -202,6 +199,7 @@ if (SpeechRecognition) {
     micBtn.style.backgroundColor = '#ccc';
 }
 
+// FUNGSI PENGURAI PERINTAH SUARA
 function processVoiceCommand(command) {
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
@@ -212,13 +210,14 @@ function processVoiceCommand(command) {
         .replace(/kurang|minus/g, '-')
         .replace(/kali|dikali|perkalian|x/g, '*')
         .replace(/bagi|dibagi|pembagian/g, '/')
+        .replace(/modulus|modulo|sisa bagi/g, ' MOD ')
         .replace(/pangkat/g, '**');
 
-    // 2. Mengubah angka dalam bentuk kata menjadi digit (Penyederhanaan)
+    // 2. Mengubah angka dalam bentuk kata menjadi digit
     expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3');
     expression = expression.replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6');
     expression = expression.replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9');
-    expression = expression.replace(/nol/g, '0').replace(/koma/g, '.').replace(/titik/g, '.');
+    expression = expression.replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
     // 3. Menghapus perintah yang tidak perlu dan membersihkan spasi berlebih
     expression = expression.replace(/tolong hitung|hitung|berapa|hasilnya|adalah/g, '').trim();
@@ -233,7 +232,7 @@ function processVoiceCommand(command) {
     // 5. Eksekusi Perhitungan
     if (expression.length > 0) {
         // Mengganti * kembali ke × untuk tampilan
-        currentExpression = expression.replace(/\*/g, '×'); 
+        currentExpression = expression.replace(/\*/g, '×').replace(/MOD/g, ' MOD '); 
         updateDisplay();
         calculate(); // Langsung hitung
     }
