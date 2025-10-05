@@ -183,9 +183,7 @@ body {
     box-shadow: 0 5px 15px rgba(0, 188, 212, 0.5);
 }
 
-/* ================================================================= */
-/* HISTORY PANEL & OVERLAY (Disesuaikan dengan lebar baru) */
-/* ================================================================= */
+/* HISTORY PANEL & OVERLAY */
 
 .history-panel {
     position: fixed; 
@@ -203,7 +201,28 @@ body {
     flex-direction: column;
 }
 
-/* ... (Kode CSS overlay dan media query tetap sama) ... */
+.history-panel.open {
+    transform: translateX(0); 
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 @media (max-width: 550px) {
     .main-container {
         max-width: none;
