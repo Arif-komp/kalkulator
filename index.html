@@ -9,8 +9,23 @@
 </head>
 <body>
     <div class="main-container">
+
+        <div class="history-panel" id="historyPanel">
+            <div class="history-header">
+                <h2>Riwayat Perhitungan</h2>
+                <button id="clearHistoryBtn" title="Hapus Semua Riwayat">
+                    <span class="material-icons">delete</span>
+                </button>
+            </div>
+            <div id="historyList" class="history-list">
+                <p class="empty-history">Belum ada perhitungan.</p>
+            </div>
+        </div>
+        
         <div class="calculator">
+            
             <div class="header">
+                <button class="burger-menu" id="burgerMenu">☰</button>
                 <h1 class="title">AYIIPP</h1>
             </div>
             
@@ -47,22 +62,10 @@
                 <button class="btn num" data-value="3">3</button>
                 <button class="btn op" data-value="+">+</button>
 
-                <button class="btn fn" data-value="module">MOD</button>
+                <button class="btn fn" data-value="module" title="Modulus (Sisa Bagi)">MOD</button>
                 <button class="btn num" data-value="0">0</button>
                 <button class="btn num" data-value=".">.</button>
                 <button class="btn eq" data-value="=">=</button>
-            </div>
-        </div>
-
-        <div class="history-panel">
-            <div class="history-header">
-                <h2>Riwayat</h2>
-                <button id="clearHistoryBtn" title="Hapus Semua Riwayat">
-                    <span class="material-icons">delete</span>
-                </button>
-            </div>
-            <div id="historyList" class="history-list">
-                <p class="empty-history">Belum ada perhitungan.</p>
             </div>
         </div>
     </div>
