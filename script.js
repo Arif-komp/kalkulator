@@ -21,7 +21,6 @@ let historyRecords = [];
 
 /**
  * Fungsi untuk menghitung faktorial (n!)
- * @param {number} n 
  */
 function factorial(n) {
     if (n < 0) return NaN;
@@ -36,29 +35,24 @@ function factorial(n) {
 
 /**
  * Mengkonversi ekspresi yang mudah dibaca pengguna menjadi ekspresi JS yang dapat dievaluasi.
- * @param {string} expression 
  */
 function cleanExpression(expression) {
-    // 1. Ganti notasi tampilan ke notasi JavaScript
     let cleaned = expression
         .replace(/÷/g, '/')
         .replace(/×/g, '*')
         .replace(/MOD/g, '%')
         .replace(/\^/g, '**');
 
-    // 2. Ganti fungsi/konstanta ramah-pengguna ke fungsi Math JavaScript
     cleaned = cleaned
         .replace(/sin\(/g, 'Math.sin(')
         .replace(/cos\(/g, 'Math.cos(')
         .replace(/tan\(/g, 'Math.tan(')
-        .replace(/log\(/g, 'Math.log10(') // Logaritma basis 10
-        .replace(/ln\(/g, 'Math.log(')    // Logaritma natural
+        .replace(/log\(/g, 'Math.log10(') 
+        .replace(/ln\(/g, 'Math.log(')    
         .replace(/sqrt\(/g, 'Math.sqrt(')
         .replace(/pi/g, 'Math.PI')
         .replace(/e/g, 'Math.E');
 
-    // 3. Tangani faktorial (n!)
-    // Penting: Menggunakan regex untuk menangani angka integer atau float sebelum '!'
     cleaned = cleaned.replace(/(\d+(\.\d+)?)!/g, (match, p1) => `factorial(${p1})`);
     
     return cleaned;
@@ -83,7 +77,6 @@ function calculate() {
     try {
         const expression = cleanExpression(expressionToCalculate);
         
-        // PENTING: Menggunakan new Function untuk eksekusi yang aman dan dapat mengakses fungsi global (factorial)
         let calculatedResult = (new Function('return ' + expression))();
         
         if (!isFinite(calculatedResult)) {
@@ -111,7 +104,6 @@ function calculate() {
 
 /**
  * Menangani input dari setiap tombol yang diklik.
- * @param {string} value - Nilai data-value dari tombol
  */
 function handleButton(value) {
     // 1. CLEAR
@@ -147,91 +139,75 @@ function handleButton(value) {
         }
     }
     
-    // Pembersihan tampilan: Pastikan '×' dan '÷' yang disukai pengguna ada di tampilan
     currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
 
     updateDisplay();
 }
 
 // =================================================================
-// EVENT LISTENERS
+// LOGIKA PEMECAHAN PERSAMAAN (Fungsi Baru)
 // =================================================================
 
-// Event listener untuk tombol di layar
-buttons.addEventListener('click', (e) => {
-    if (e.target.classList.contains('btn')) {
-        const value = e.target.getAttribute('data-value');
-        if (value === 'module') {
-             handleButton(' MOD '); // Beri spasi untuk modulus
-        } else {
-             handleButton(value);
+/**
+ * Mencoba menyelesaikan persamaan linear dasar yang disamarkan dalam bahasa alami.
+ * Contoh: "15 dikali berapa hasilnya 500" -> "500 / 15"
+ */
+function solveSimpleEquation(text) {
+    // Tanda kunci: "hasilnya" atau "sama dengan"
+    const resultKeywords = /hasilnya|sama\s*dengan/i;
+    if (!resultKeywords.test(text)) {
+        return null; // Bukan persamaan
+    }
+
+    // Mengganti "berapa" dengan variabel sementara 'x' dan memecah kalimat di keyword hasil
+    const parts = text.replace(/berapa/g, 'x').split(resultKeywords);
+    
+    if (parts.length !== 2) {
+        return null; 
+    }
+    
+    let leftSide = parts[0].trim().replace(/\s+/g, ''); // Ekspresi yang mengandung x
+    let rightSide = parts[1].trim(); // Hasil akhir
+    
+    // Logika Pemecahan: x harus berada di salah satu sisi operator
+    
+    if (leftSide.includes('x')) {
+        let num;
+        
+        // Penambahan: x + num = rightSide -> rightSide - num
+        if (leftSide.includes('+')) {
+            [num] = leftSide.split('+').filter(p => p !== 'x');
+            return `${rightSide} - ${num}`; 
+        }
+        // Pengurangan: num - x = rightSide -> num - rightSide, ATAU x - num = rightSide -> rightSide + num
+        if (leftSide.includes('-')) {
+            if (leftSide.startsWith('x')) {
+                 [num] = leftSide.split('x-').filter(p => p !== 'x');
+                 return `${rightSide} + ${num}`;
+            } else {
+                 [num] = leftSide.split('-x').filter(p => p !== 'x');
+                 return `${num} - ${rightSide}`;
+            }
+        }
+        // Perkalian (Contoh Anda: 15 * x = 500)
+        if (leftSide.includes('*')) {
+            [num] = leftSide.split('*').filter(p => p !== 'x');
+            return `${rightSide} / ${num}`; // x * num = rightSide -> rightSide / num
+        }
+        // Pembagian: x / num = rightSide -> rightSide * num, ATAU num / x = rightSide -> num / rightSide
+        if (leftSide.includes('/')) {
+             if (leftSide.startsWith('x')) {
+                [num] = leftSide.split('x/').filter(p => p !== 'x');
+                return `${rightSide} * ${num}`;
+            } else {
+                [num] = leftSide.split('/x').filter(p => p !== 'x');
+                return `${num} / ${rightSide}`;
+            }
         }
     }
-});
-
-
-// =================================================================
-// LOGIKA RIWAYAT & MENU
-// =================================================================
-
-function toggleHistoryPanel(isOpen) {
-    if (isOpen) {
-        historyPanel.classList.add('open');
-        overlay.classList.add('active');
-    } else {
-        historyPanel.classList.remove('open');
-        overlay.classList.remove('active');
-    }
-}
-
-burgerMenuBtn.addEventListener('click', () => {
-    const isCurrentlyOpen = historyPanel.classList.contains('open');
-    toggleHistoryPanel(!isCurrentlyOpen);
-});
-
-overlay.addEventListener('click', () => {
-    toggleHistoryPanel(false);
-});
-
-function renderHistory() {
-    historyListEl.innerHTML = '';
     
-    if (historyRecords.length === 0) {
-        historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>';
-        return;
-    }
-
-    historyRecords.slice().reverse().forEach((record) => {
-        const item = document.createElement('div');
-        item.classList.add('history-item');
-        item.innerHTML = `
-            <div class="history-expression">${record.expression} =</div>
-            <div class="history-result">${record.result}</div>
-        `;
-
-        item.addEventListener('click', () => {
-            currentExpression = String(record.result);
-            historyCurrentEl.textContent = record.expression + ' =';
-            lastResult = record.result;
-            updateDisplay();
-            toggleHistoryPanel(false);
-        });
-
-        historyListEl.appendChild(item);
-    });
+    return null; 
 }
-
-function addToHistory(expression, result) {
-    if (expression !== 'Error' && expression !== '0') {
-        historyRecords.push({ expression: expression, result: result });
-        renderHistory();
-    }
-}
-
-clearHistoryBtn.addEventListener('click', () => {
-    historyRecords = [];
-    renderHistory();
-});
 
 
 // =================================================================
@@ -300,7 +276,7 @@ function processVoiceCommand(command) {
         .replace(/bagi|dibagi|per/g, '/')
         .replace(/modulus|modulo|sisa bagi/g, ' MOD ');
 
-    // 2. Mengubah angka
+    // 2. Mengubah angka dalam bentuk kata
     expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3');
     expression = expression.replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6');
     expression = expression.replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9');
@@ -312,26 +288,114 @@ function processVoiceCommand(command) {
         return;
     }
     
-    // 4. Membersihkan dan Eksekusi
-    expression = expression.replace(/tolong hitung|hitung|berapa|hasilnya|adalah/g, '').trim();
-    expression = expression.replace(/\s+/g, '');
+    // 4. Membersihkan untuk analisis
+    let cleanSpeech = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
+    cleanSpeech = cleanSpeech.replace(/\s+/g, '');
+    
+    // 5. LOGIKA BARU: PEMECAHAN PERSAMAAN CEPAT
+    const solvedExpression = solveSimpleEquation(cleanSpeech);
 
-    if (expression.length > 0) {
-        currentExpression = expression
+    if (solvedExpression) {
+        // Jika berhasil dipecahkan
+        historyCurrentEl.textContent = `Pemecahan: ${command} -> ${solvedExpression.replace(/\*/g, '×').replace(/\//g, '÷')}`;
+        currentExpression = solvedExpression;
+        updateDisplay();
+        calculate(); 
+        return; 
+    }
+
+    // 6. Jika bukan persamaan, lakukan perhitungan langsung
+    if (cleanSpeech.length > 0) {
+        currentExpression = cleanSpeech
             .replace(/\*/g, '×')
             .replace(/\//g, '÷')
             .replace(/\^/g, '^')
             .replace(/MOD/g, ' MOD '); 
         
         updateDisplay();
-        calculate(); // Langsung hitung hasil dari suara
+        calculate(); 
     }
 }
 
 
 // =================================================================
-// INISIALISASI
+// EVENT LISTENERS TAMBAHAN DAN INISIALISASI
 // =================================================================
 
+// Event listener untuk tombol di layar
+buttons.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn')) {
+        const value = e.target.getAttribute('data-value');
+        if (value === 'module') {
+             handleButton(' MOD '); 
+        } else {
+             handleButton(value);
+        }
+    }
+});
+
+// Logika Riwayat/Menu (disertakan di sini untuk kelengkapan)
+
+function toggleHistoryPanel(isOpen) {
+    if (isOpen) {
+        historyPanel.classList.add('open');
+        overlay.classList.add('active');
+    } else {
+        historyPanel.classList.remove('open');
+        overlay.classList.remove('active');
+    }
+}
+
+burgerMenuBtn.addEventListener('click', () => {
+    const isCurrentlyOpen = historyPanel.classList.contains('open');
+    toggleHistoryPanel(!isCurrentlyOpen);
+});
+
+overlay.addEventListener('click', () => {
+    toggleHistoryPanel(false);
+});
+
+function renderHistory() {
+    historyListEl.innerHTML = '';
+    
+    if (historyRecords.length === 0) {
+        historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>';
+        return;
+    }
+
+    historyRecords.slice().reverse().forEach((record) => {
+        const item = document.createElement('div');
+        item.classList.add('history-item');
+        item.innerHTML = `
+            <div class="history-expression">${record.expression} =</div>
+            <div class="history-result">${record.result}</div>
+        `;
+
+        item.addEventListener('click', () => {
+            currentExpression = String(record.result);
+            historyCurrentEl.textContent = record.expression + ' =';
+            lastResult = record.result;
+            updateDisplay();
+            toggleHistoryPanel(false);
+        });
+
+        historyListEl.appendChild(item);
+    });
+}
+
+function addToHistory(expression, result) {
+    if (expression !== 'Error' && expression !== '0') {
+        historyRecords.push({ expression: expression, result: result });
+        renderHistory();
+    }
+}
+
+clearHistoryBtn.addEventListener('click', () => {
+    historyRecords = [];
+    renderHistory();
+});
+
+
+// INISIALISASI
 updateDisplay();
 renderHistory();
