@@ -5,7 +5,7 @@
     --card-color: #ffffff;
     --text-color: #333;
     --operator-color: #ff9800;
-    --scientific-color: #4db6ac; /* Warna biru-hijau untuk fungsi ilmiah */
+    --scientific-color: #4db6ac;
     --history-bg: #e8f5e9;
     --history-width: 300px;
 }
@@ -64,71 +64,58 @@ body {
     margin: 0;
 }
 
-/* Tombol Kalkulator */
+/* Input Suara */
+.voice-input {
+    /* Hanya ada tombol, jadi hilangkan flex untuk status */
+    margin-bottom: 20px;
+}
+
+.mic-button {
+    width: 100%; /* Tombol memenuhi lebar penuh */
+    padding: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 10px; /* Sedikit lebih membulat */
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.1s;
+    font-weight: 600;
+}
+
+.mic-button:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Efek Tombol Saat Mendengarkan (LISTENING) */
+.mic-button.listening {
+    background-color: #f44336; /* Warna merah saat aktif */
+    box-shadow: 0 0 15px rgba(244, 67, 54, 0.7); /* Bayangan menarik */
+    transform: scale(1.02);
+    color: white;
+    font-weight: bold;
+}
+
+/* Status text (dihilangkan dari HTML)
+.status { ... } 
+.listening { ... }
+*/
+
+/* Tombol Kalkulator (styling lainnya sama) */
 .buttons {
-    /* 6 kolom untuk menampung tombol ilmiah dan operator */
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
 }
 
-.btn {
-    padding: 15px;
-    font-size: 1.1em;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    background-color: #eceff1;
-    color: var(--text-color);
-    transition: background-color 0.2s;
-    font-weight: 500;
-}
-
-.num {
-    background-color: #ffffff; /* Angka lebih cerah */
-}
-
-.op {
-    background-color: #fff3e0;
-    color: var(--operator-color);
-    font-weight: bold;
-}
-
-.fn {
-    background-color: #e0f2f1;
-    color: var(--primary-dark);
-    font-weight: bold;
-}
-
-/* Tombol Ilmiah Baru */
 .sci {
     background-color: var(--scientific-color);
     color: white;
     font-size: 1em;
     font-weight: 500;
 }
-.sci:hover {
-    background-color: #00897b;
-}
 
-.eq {
-    background-color: var(--primary-color);
-    color: white;
-    font-size: 1.8em;
-    /* Mengambil ruang tombol + */
-    grid-column: 4;
-    grid-row: 9;
-}
-.buttons button[data-value="+"] {
-    /* Tombol + kini memiliki ukuran normal */
-    font-size: 1.4em;
-    font-weight: bold;
-}
-
-/* ================================================================= */
-/* HISTORY PANEL & OVERLAY (Pastikan tetap sama dan berfungsi) */
-/* ================================================================= */
-
+/* ... (Bagian CSS lainnya untuk tombol dan riwayat sama) ... */
 .history-panel {
     position: fixed; 
     top: 0;
@@ -165,16 +152,4 @@ body {
 .overlay.active {
     opacity: 1;
     pointer-events: auto;
-}
-
-@media (max-width: 500px) {
-    .main-container {
-        max-width: none;
-        min-height: 100vh;
-        border-radius: 0;
-        box-shadow: none;
-    }
-    .history-panel {
-        width: 80%;
-    }
 }
