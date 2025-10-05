@@ -1,17 +1,20 @@
 :root {
-    --primary-color: #4CAF50; /* Hijau modern */
-    --primary-dark: #388E3C;
-    --background-color: #f4f7f6;
+    /* Palet warna yang lebih lembut dan profesional */
+    --primary-color: #00bcd4; /* Cyan - Lebih Modern */
+    --primary-dark: #0097a7;
+    --background-color: #eef1f5; /* Abu-abu muda yang modern */
     --card-color: #ffffff;
     --text-color: #333;
-    --operator-color: #ff9800;
-    --scientific-color: #4db6ac;
-    --history-bg: #e8f5e9;
-    --history-width: 300px;
+    --operator-color: #ff9800; /* Oranye */
+    --scientific-color: #5c6bc0; /* Indigo */
+    --history-bg: #f5f7fa;
+    --history-width: 350px; /* Diperbesar sedikit */
+    --calc-max-width: 500px; /* Ukuran kalkulator lebih besar */
+    --padding-base: 30px;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--background-color);
     display: flex;
     justify-content: center;
@@ -26,96 +29,164 @@ body {
 .main-container {
     position: relative;
     width: 100%;
-    max-width: 450px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    border-radius: 20px;
+    max-width: var(--calc-max-width);
+    /* Shadow yang lebih halus (modern/neumorphism tipis) */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.05);
+    border-radius: 25px;
     overflow: hidden;
 }
 
 .calculator {
     background-color: var(--card-color);
-    padding: 25px;
+    padding: var(--padding-base);
 }
 
-/* Header dan Menu */
+/* Header */
 .header {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .burger-menu {
     background: none;
     border: none;
-    font-size: 2em;
+    font-size: 2.5em; /* Diperbesar */
     cursor: pointer;
     color: var(--primary-dark);
-    margin-right: 15px;
-    padding: 0;
-    position: relative; 
+    margin-right: 20px;
+    padding: 5px;
+    transition: color 0.2s;
     z-index: 1001; 
 }
 
 .title {
     color: var(--primary-color);
-    font-size: 2.2em;
-    font-weight: 700;
-    letter-spacing: 4px;
+    font-size: 2.5em; /* Diperbesar */
+    font-weight: 800;
+    letter-spacing: 5px;
     margin: 0;
 }
 
-/* Input Suara */
-.voice-input {
-    /* Hanya ada tombol, jadi hilangkan flex untuk status */
+/* Tampilan Layar */
+.display-container {
+    text-align: right;
     margin-bottom: 20px;
+    padding: 15px 0;
+}
+
+.history-current {
+    font-size: 1.2em; /* Diperbesar */
+    color: #888;
+    min-height: 1.2em;
+}
+
+.result {
+    font-size: 4.5em; /* Diperbesar signifikan */
+    font-weight: 300;
+    color: var(--text-color);
+    overflow-x: auto;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+/* Tombol Rekam */
+.voice-input {
+    margin-bottom: 25px;
 }
 
 .mic-button {
-    width: 100%; /* Tombol memenuhi lebar penuh */
-    padding: 15px;
+    width: 100%;
+    padding: 18px; /* Lebih besar */
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 10px; /* Sedikit lebih membulat */
-    font-size: 1.2em;
+    border-radius: 12px;
+    font-size: 1.3em; /* Lebih besar */
     cursor: pointer;
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.1s;
     font-weight: 600;
+    box-shadow: 0 5px 15px rgba(0, 188, 212, 0.4); /* Shadow untuk tombol */
 }
 
 .mic-button:hover {
     background-color: var(--primary-dark);
 }
 
-/* Efek Tombol Saat Mendengarkan (LISTENING) */
 .mic-button.listening {
-    background-color: #f44336; /* Warna merah saat aktif */
-    box-shadow: 0 0 15px rgba(244, 67, 54, 0.7); /* Bayangan menarik */
-    transform: scale(1.02);
-    color: white;
+    background-color: #e53935; /* Merah */
+    box-shadow: 0 0 20px rgba(229, 57, 53, 0.8); /* Bayangan merah menyala */
+    transform: scale(1.01);
     font-weight: bold;
 }
 
-/* Status text (dihilangkan dari HTML)
-.status { ... } 
-.listening { ... }
-*/
-
-/* Tombol Kalkulator (styling lainnya sama) */
+/* Tombol Kalkulator */
 .buttons {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 15px; /* Jarak antar tombol lebih lebar */
 }
 
+.btn {
+    padding: 20px; /* Padding lebih besar */
+    font-size: 1.4em; /* Font tombol lebih besar */
+    border: none;
+    border-radius: 15px; /* Sudut lebih membulat */
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.1s, transform 0.1s;
+    font-weight: 500;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1); /* Shadow tombol standar */
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.num {
+    background-color: #f7f7f7; 
+    color: var(--text-color);
+}
+
+.op {
+    background-color: #ffe0b2;
+    color: var(--operator-color);
+    font-weight: bold;
+}
+
+.fn {
+    background-color: #e0f7fa;
+    color: var(--primary-dark);
+    font-weight: bold;
+}
+
+/* Tombol Ilmiah */
 .sci {
     background-color: var(--scientific-color);
     color: white;
-    font-size: 1em;
+    font-size: 1.2em;
     font-weight: 500;
+    box-shadow: 0 3px 6px rgba(92, 107, 192, 0.4);
 }
 
-/* ... (Bagian CSS lainnya untuk tombol dan riwayat sama) ... */
+.sci:hover {
+    background-color: #44508d;
+}
+
+.eq {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 2.2em; 
+    font-weight: bold;
+    grid-column: 4;
+    grid-row: 9;
+    box-shadow: 0 5px 15px rgba(0, 188, 212, 0.5);
+}
+
+/* ================================================================= */
+/* HISTORY PANEL & OVERLAY (Disesuaikan dengan lebar baru) */
+/* ================================================================= */
+
 .history-panel {
     position: fixed; 
     top: 0;
@@ -123,33 +194,34 @@ body {
     height: 100%;
     width: var(--history-width);
     background-color: var(--history-bg);
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    box-shadow: -8px 0 20px rgba(0, 0, 0, 0.3); /* Shadow lebih kuat */
     transform: translateX(100%); 
     transition: transform 0.3s ease-in-out;
-    padding: 25px;
+    padding: var(--padding-base);
     z-index: 1000; 
     display: flex;
     flex-direction: column;
 }
 
-.history-panel.open {
-    transform: translateX(0); 
-}
-
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-}
-
-.overlay.active {
-    opacity: 1;
-    pointer-events: auto;
+/* ... (Kode CSS overlay dan media query tetap sama) ... */
+@media (max-width: 550px) {
+    .main-container {
+        max-width: none;
+        min-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .calculator {
+        padding: 20px;
+    }
+    .buttons {
+        gap: 10px;
+    }
+    .btn {
+        padding: 15px;
+        font-size: 1.2em;
+    }
+    .history-panel {
+        width: 85%;
+    }
 }
