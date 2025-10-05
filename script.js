@@ -17,9 +17,9 @@ const overlay = document.getElementById('overlay');
 let currentExpression = '0';
 let lastResult = null;
 let historyRecords = [];
-let isSolvingEquation = false; // Flag untuk melacak mode pemecahan masalah
-let targetValue = null;         // Target nilai (misalnya 500)
-let inputNumber = null;         // Angka masukan (misalnya 15)
+let isSolvingEquation = false; 
+let targetValue = null;         
+let inputNumber = null;         
 
 
 /**
@@ -66,7 +66,6 @@ function cleanExpression(expression) {
  */
 function updateDisplay() {
     resultEl.textContent = currentExpression;
-    // Penyesuaian font size agar hasil panjang tetap terlihat
     resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '4.5em';
 }
 
@@ -81,7 +80,6 @@ function calculate() {
     try {
         const expression = cleanExpression(expressionToCalculate);
         
-        // PENTING: Menggunakan new Function untuk eksekusi yang aman
         let calculatedResult = (new Function('return ' + expression))();
         
         if (!isFinite(calculatedResult)) {
@@ -137,7 +135,7 @@ function calculate() {
         // =========================================================
 
         historyCurrentEl.textContent = expressionToCalculate + ' =';
-        lastResult = calculatedResult; // Simpan nilai desimal asli 
+        lastResult = calculatedResult; 
         
         // Tampilkan jawaban kombinasi di layar utama jika ada
         if (combinationDetails) {
@@ -283,34 +281,42 @@ function processVoiceCommand(command) {
         return;
     }
     
-    // 4. Analisis Frasa Fleksibel ("Diapakan agar hasilnya")
-    const flexKeywords = /diapakan/i;
-    const targetKeywords = /hasilnya|sama\s*dengan/i;
+    // 4. Analisis Frasa Fleksibel BARU (Pola Pendek: "15 ke 500")
+    const simpleFlexMatch = command.match(/(\d+(\.\d+)?)\s+(ke|buat|jadi)\s+(\d+(\.\d+)?)/i);
     
-    if (flexKeywords.test(command) && targetKeywords.test(command)) {
-        
-        const match = command.match(/(\d+(\.\d+)?)\s+diapakan\s+agar\s+hasilnya\s+(\d+(\.\d+)?)/i);
-        
-        if (match && match.length >= 4) {
-            // Logika hanya berlaku untuk perkalian/pembagian karena itu yang menghasilkan kombinasi Y
-            const num1 = match[1]; // Angka Input (misalnya 15)
-            const num2 = match[3]; // Angka Target (misalnya 500)
+    // Analisis Frasa Fleksibel LAMA (Pola Panjang: "15 diapakan agar hasilnya 500")
+    const complexFlexMatch = command.match(/(\d+(\.\d+)?)\s+diapakan\s+agar\s+hasilnya\s+(\d+(\.\d+)?)/i);
 
-            // Atur variabel global untuk dipakai di fungsi calculate()
-            inputNumber = parseFloat(num1);
-            targetValue = parseFloat(num2);
+    let match = simpleFlexMatch || complexFlexMatch;
 
-            isSolvingEquation = true; // Set flag untuk mengaktifkan logika kombinasi
-            
-            // Ekspresi yang akan dihitung adalah pembagian sederhana untuk mendapatkan X float
-            let solvedExpression = `${num2} / ${num1}`;
-            
-            historyCurrentEl.textContent = `Pencarian Kombinasi: ${command} -> ${solvedExpression}`;
-            currentExpression = solvedExpression;
-            updateDisplay();
-            calculate(); 
-            return;
+    if (match) {
+        
+        let num1, num2;
+
+        if (simpleFlexMatch) {
+            // Untuk pola pendek: [Angka Input] [ke/buat/jadi] [Angka Target]
+            num1 = match[1]; 
+            num2 = match[4]; 
+        } else {
+             // Untuk pola panjang: [Angka Input] diapakan agar hasilnya [Angka Target]
+            num1 = match[1]; 
+            num2 = match[4]; 
         }
+
+        // Atur variabel global untuk dipakai di fungsi calculate()
+        inputNumber = parseFloat(num1);
+        targetValue = parseFloat(num2);
+
+        isSolvingEquation = true; // Set flag untuk mengaktifkan logika kombinasi
+        
+        // Ekspresi yang akan dihitung adalah pembagian sederhana (sebagai basis pencarian)
+        let solvedExpression = `${num2} / ${num1}`;
+        
+        historyCurrentEl.textContent = `Pencarian Kombinasi: ${command} -> ${solvedExpression}`;
+        currentExpression = solvedExpression;
+        updateDisplay();
+        calculate(); 
+        return;
     }
     
     // 5. Jika bukan frasa fleksibel, lakukan perhitungan langsung
@@ -329,6 +335,7 @@ function processVoiceCommand(command) {
 
 // =================================================================
 // LOGIKA RIWAYAT & MENU
+// (Tidak ada perubahan signifikan di sini)
 // =================================================================
 
 function toggleHistoryPanel(isOpen) {
