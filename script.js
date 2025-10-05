@@ -17,7 +17,9 @@ const overlay = document.getElementById('overlay');
 let currentExpression = '0';
 let lastResult = null;
 let historyRecords = [];
-
+let isSolvingEquation = false; // Flag untuk melacak mode pemecahan masalah
+let targetValue = null;         // Target nilai (misalnya 500)
+let inputNumber = null;         // Angka masukan (misalnya 15)
 
 /**
  * Fungsi untuk menghitung faktorial (n!)
@@ -83,14 +85,70 @@ function calculate() {
              throw new Error("Invalid Calculation");
         }
 
-        calculatedResult = parseFloat(calculatedResult.toFixed(10));
-        let formattedResult = String(calculatedResult);
-        
-        addToHistory(expressionToCalculate, formattedResult); 
-        
+        // =========================================================
+        // LOGIKA BARU UNTUK KOMBINASI DAN PEMBULATAN CERDAS
+        // =========================================================
+        let formattedResult;
+        let combinationDetails = null; // Detail baru untuk kombinasi
+
+        if (isSolvingEquation && calculatedResult % 1 !== 0) {
+            
+            let X = Math.round(calculatedResult);
+            let Y = 0;
+            let finalExpression = expressionToCalculate;
+
+            // Logika hanya berlaku untuk operasi perkalian sederhana (seperti 500/15)
+            // Cek apakah ekspresi adalah pembagian hasil dari solveSimpleEquation
+            if (expressionToCalculate.includes('/') && targetValue !== null && inputNumber !== null) {
+                
+                // Hitung hasil dengan bilangan bulat (X)
+                let actualResult = X * inputNumber;
+                
+                // Hitung selisih (Y) yang dibutuhkan
+                Y = targetValue - actualResult;
+                
+                // Ekspresi yang akan dicatat: (Input * X) + Y
+                finalExpression = `${inputNumber} × ${X} ${Y >= 0 ? '+' : '-'} ${Math.abs(Y)}`;
+                formattedResult = `${X} dan ${Y > 0 ? 'tambah' : 'kurang'} ${Math.abs(Y)}`;
+
+                // Simpan detail kombinasi
+                combinationDetails = {
+                    X: X, 
+                    Y: Y, 
+                    finalExpression: finalExpression, 
+                    target: targetValue,
+                    operation: Y >= 0 ? '+' : '-'
+                };
+            }
+            
+            // Jika tidak ada kombinasi yang ditemukan (misalnya, bukan perkalian), gunakan pembulatan sederhana
+            if (combinationDetails === null) {
+                formattedResult = String(X);
+            }
+            
+            // Masukkan hasil ke riwayat
+            addToHistory(finalExpression, formattedResult, combinationDetails, calculatedResult); 
+
+        } else {
+            // Logika standar untuk perhitungan langsung
+            calculatedResult = parseFloat(calculatedResult.toFixed(10));
+            formattedResult = String(calculatedResult);
+            addToHistory(expressionToCalculate, formattedResult, null, calculatedResult); 
+        }
+        // =========================================================
+
         historyCurrentEl.textContent = expressionToCalculate + ' =';
-        lastResult = calculatedResult;
-        currentExpression = formattedResult;
+        lastResult = calculatedResult; // Simpan nilai desimal asli untuk perhitungan berikutnya
+        
+        // Tampilkan jawaban kombinasi di layar utama jika ada
+        if (combinationDetails) {
+            resultEl.textContent = combinationDetails.X;
+            // Tampilkan rincian kombinasi di atas hasil utama
+            historyCurrentEl.textContent = `Pilihan Bulat: ${combinationDetails.finalExpression} = ${combinationDetails.target}`;
+        } else {
+             currentExpression = formattedResult;
+        }
+
         updateDisplay();
 
     } catch (error) {
@@ -99,6 +157,10 @@ function calculate() {
         lastResult = null;
         updateDisplay();
         console.error("Calculation Error:", error);
+    } finally {
+        isSolvingEquation = false; // Reset flag
+        targetValue = null;
+        inputNumber = null;
     }
 }
 
@@ -106,21 +168,18 @@ function calculate() {
  * Menangani input dari setiap tombol yang diklik.
  */
 function handleButton(value) {
-    // 1. CLEAR
+    // ... (Logika handleButton sama seperti sebelumnya) ...
     if (value === 'clear') {
         currentExpression = '0';
         historyCurrentEl.textContent = '';
         lastResult = null;
-    // 2. EQUALS
     } else if (value === '=') {
         calculate();
         return;
-    // 3. FAKTORIAL
     } else if (value === 'fact') {
          if (/[0-9)]/.test(currentExpression.slice(-1))) {
              currentExpression += '!';
          }
-    // 4. ANGKA DAN OPERATOR LAIN
     } else {
         if (lastResult !== null && lastResult !== undefined) {
              if (/[+\-*/ MOD()^]/.test(value) || value.includes('(')) {
@@ -145,56 +204,41 @@ function handleButton(value) {
 }
 
 // =================================================================
-// LOGIKA PEMECAHAN PERSAMAAN (Fungsi Baru)
+// LOGIKA PEMECAHAN PERSAMAAN 
 // =================================================================
 
 /**
- * Mencoba menyelesaikan persamaan linear dasar yang disamarkan dalam bahasa alami.
- * Contoh: "15 dikali berapa hasilnya 500" -> "500 / 15"
+ * Mencoba menyelesaikan persamaan linear dasar dan mengekstrak komponennya.
+ * @returns {string|null} Ekspresi perhitungan untuk mendapatkan X, atau null.
  */
 function solveSimpleEquation(text) {
-    // Tanda kunci: "hasilnya" atau "sama dengan"
     const resultKeywords = /hasilnya|sama\s*dengan/i;
     if (!resultKeywords.test(text)) {
-        return null; // Bukan persamaan
+        return null; 
     }
 
-    // Mengganti "berapa" dengan variabel sementara 'x' dan memecah kalimat di keyword hasil
     const parts = text.replace(/berapa/g, 'x').split(resultKeywords);
     
     if (parts.length !== 2) {
         return null; 
     }
     
-    let leftSide = parts[0].trim().replace(/\s+/g, ''); // Ekspresi yang mengandung x
-    let rightSide = parts[1].trim(); // Hasil akhir
-    
-    // Logika Pemecahan: x harus berada di salah satu sisi operator
+    let leftSide = parts[0].trim().replace(/\s+/g, ''); 
+    let rightSide = parts[1].trim(); 
     
     if (leftSide.includes('x')) {
         let num;
         
-        // Penambahan: x + num = rightSide -> rightSide - num
-        if (leftSide.includes('+')) {
-            [num] = leftSide.split('+').filter(p => p !== 'x');
-            return `${rightSide} - ${num}`; 
-        }
-        // Pengurangan: num - x = rightSide -> num - rightSide, ATAU x - num = rightSide -> rightSide + num
-        if (leftSide.includes('-')) {
-            if (leftSide.startsWith('x')) {
-                 [num] = leftSide.split('x-').filter(p => p !== 'x');
-                 return `${rightSide} + ${num}`;
-            } else {
-                 [num] = leftSide.split('-x').filter(p => p !== 'x');
-                 return `${num} - ${rightSide}`;
-            }
-        }
-        // Perkalian (Contoh Anda: 15 * x = 500)
+        // Kasus Perkalian (Paling relevan untuk kombinasi): num * x = rightSide
         if (leftSide.includes('*')) {
             [num] = leftSide.split('*').filter(p => p !== 'x');
-            return `${rightSide} / ${num}`; // x * num = rightSide -> rightSide / num
+            // Simpan nilai untuk perhitungan kombinasi di calculate()
+            inputNumber = parseFloat(num);
+            targetValue = parseFloat(rightSide);
+            return `${rightSide} / ${num}`; 
         }
-        // Pembagian: x / num = rightSide -> rightSide * num, ATAU num / x = rightSide -> num / rightSide
+        
+        // Kasus Pembagian: x / num = rightSide ATAU num / x = rightSide
         if (leftSide.includes('/')) {
              if (leftSide.startsWith('x')) {
                 [num] = leftSide.split('x/').filter(p => p !== 'x');
@@ -204,6 +248,21 @@ function solveSimpleEquation(text) {
                 return `${num} / ${rightSide}`;
             }
         }
+        // Kasus Penambahan: x + num = rightSide
+        if (leftSide.includes('+')) {
+            [num] = leftSide.split('+').filter(p => p !== 'x');
+            return `${rightSide} - ${num}`; 
+        }
+        // Kasus Pengurangan: x - num = rightSide ATAU num - x = rightSide
+        if (leftSide.includes('-')) {
+            if (leftSide.startsWith('x')) {
+                 [num] = leftSide.split('x-').filter(p => p !== 'x');
+                 return `${rightSide} + ${num}`;
+            } else {
+                 [num] = leftSide.split('-x').filter(p => p !== 'x');
+                 return `${num} - ${rightSide}`;
+            }
+        }
     }
     
     return null; 
@@ -211,9 +270,10 @@ function solveSimpleEquation(text) {
 
 
 // =================================================================
-// LOGIKA INPUT SUARA
+// LOGIKA INPUT SUARA & RIWAYAT
 // =================================================================
 
+// ... (Kode SpeechRecognition dan processVoiceCommand sama, tetapi dengan pembaruan pada processVoiceCommand) ...
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 
@@ -271,7 +331,7 @@ function processVoiceCommand(command) {
         .replace(/logaritma/g, 'log(')
         .replace(/faktorial/g, '!')
         .replace(/tambah|plus/g, '+')
-        .replace(/kurang|minus/g, '-')
+        .replace(/kurang|minus|kurangi/g, '-')
         .replace(/kali|dikali|perkalian|x/g, '*')
         .replace(/bagi|dibagi|per/g, '/')
         .replace(/modulus|modulo|sisa bagi/g, ' MOD ');
@@ -292,11 +352,11 @@ function processVoiceCommand(command) {
     let cleanSpeech = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
     cleanSpeech = cleanSpeech.replace(/\s+/g, '');
     
-    // 5. LOGIKA BARU: PEMECAHAN PERSAMAAN CEPAT
+    // 5. PEMECAHAN PERSAMAAN CEPAT
     const solvedExpression = solveSimpleEquation(cleanSpeech);
 
     if (solvedExpression) {
-        // Jika berhasil dipecahkan
+        isSolvingEquation = true; // Set flag
         historyCurrentEl.textContent = `Pemecahan: ${command} -> ${solvedExpression.replace(/\*/g, '×').replace(/\//g, '÷')}`;
         currentExpression = solvedExpression;
         updateDisplay();
@@ -319,22 +379,8 @@ function processVoiceCommand(command) {
 
 
 // =================================================================
-// EVENT LISTENERS TAMBAHAN DAN INISIALISASI
+// LOGIKA RIWAYAT
 // =================================================================
-
-// Event listener untuk tombol di layar
-buttons.addEventListener('click', (e) => {
-    if (e.target.classList.contains('btn')) {
-        const value = e.target.getAttribute('data-value');
-        if (value === 'module') {
-             handleButton(' MOD '); 
-        } else {
-             handleButton(value);
-        }
-    }
-});
-
-// Logika Riwayat/Menu (disertakan di sini untuk kelengkapan)
 
 function toggleHistoryPanel(isOpen) {
     if (isOpen) {
@@ -366,15 +412,31 @@ function renderHistory() {
     historyRecords.slice().reverse().forEach((record) => {
         const item = document.createElement('div');
         item.classList.add('history-item');
+        
+        let expressionText = record.expression;
+        let resultText = record.result;
+
+        // Tampilkan hasil kombinasi yang mudah dibaca
+        if (record.combination) {
+             expressionText = record.combination.finalExpression;
+             resultText = `Jawaban: ${record.combination.X} (${record.combination.operation === '+' ? 'tambah' : 'kurang'} ${Math.abs(record.combination.Y)})`;
+        }
+        
         item.innerHTML = `
-            <div class="history-expression">${record.expression} =</div>
-            <div class="history-result">${record.result}</div>
+            <div class="history-expression">${expressionText} =</div>
+            <div class="history-result">${resultText}</div>
         `;
 
         item.addEventListener('click', () => {
-            currentExpression = String(record.result);
-            historyCurrentEl.textContent = record.expression + ' =';
-            lastResult = record.result;
+            // Saat diklik, gunakan hasil yang dibulatkan (X) jika ada kombinasi, atau hasil biasa
+            if (record.combination) {
+                currentExpression = String(record.combination.X);
+                historyCurrentEl.textContent = `Jawaban: ${expressionText} = ${record.combination.target}`;
+            } else {
+                currentExpression = String(record.result);
+                historyCurrentEl.textContent = record.expression + ' =';
+            }
+            lastResult = parseFloat(record.originalResult);
             updateDisplay();
             toggleHistoryPanel(false);
         });
@@ -383,9 +445,14 @@ function renderHistory() {
     });
 }
 
-function addToHistory(expression, result) {
+function addToHistory(expression, result, combination = null, originalResult = null) {
     if (expression !== 'Error' && expression !== '0') {
-        historyRecords.push({ expression: expression, result: result });
+        historyRecords.push({ 
+            expression: expression, 
+            result: result, 
+            combination: combination,
+            originalResult: originalResult || result
+        });
         renderHistory();
     }
 }
@@ -393,6 +460,18 @@ function addToHistory(expression, result) {
 clearHistoryBtn.addEventListener('click', () => {
     historyRecords = [];
     renderHistory();
+});
+
+// Event listener untuk tombol di layar
+buttons.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn')) {
+        const value = e.target.getAttribute('data-value');
+        if (value === 'module') {
+             handleButton(' MOD '); 
+        } else {
+             handleButton(value);
+        }
+    }
 });
 
 
