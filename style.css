@@ -1,0 +1,264 @@
+:root {
+    --primary-color: #4CAF50; /* Hijau modern */
+    --primary-dark: #388E3C;
+    --background-color: #f4f7f6;
+    --card-color: #ffffff;
+    --text-color: #333;
+    --operator-color: #ff9800; /* Oranye untuk operator */
+    --history-bg: #e8f5e9; /* Latar belakang riwayat */
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.main-container {
+    display: flex;
+    gap: 30px; /* Jarak antara kalkulator dan riwayat */
+    max-width: 900px; /* Lebar maksimum kontainer */
+    width: 100%;
+}
+
+.calculator {
+    background-color: var(--card-color);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 400px;
+    padding: 25px;
+    flex-shrink: 0; /* Mencegah kalkulator menyusut */
+}
+
+/* Header AYIIPP */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.title {
+    color: var(--primary-color);
+    font-size: 2.2em;
+    font-weight: 700;
+    letter-spacing: 5px;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Layar Tampilan */
+.display-container {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: right;
+    overflow: hidden;
+}
+
+.history-current {
+    font-size: 0.9em;
+    color: #888;
+    min-height: 1.2em;
+}
+
+.result {
+    font-size: 3em;
+    font-weight: 500;
+    color: var(--text-color);
+    word-wrap: break-word;
+    min-height: 1.2em;
+}
+
+/* Input Suara */
+.voice-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.mic-button {
+    flex-grow: 1;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.mic-button:hover {
+    background-color: var(--primary-dark);
+}
+
+.status {
+    width: 60px;
+    text-align: center;
+    font-size: 0.9em;
+    color: var(--text-color);
+    padding: 5px;
+    border-radius: 5px;
+    transition: background-color 0.5s;
+}
+
+.listening {
+    background-color: #ffe0b2;
+    color: #e65100;
+    font-weight: bold;
+}
+
+/* Tombol Kalkulator */
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.btn {
+    padding: 15px;
+    font-size: 1.4em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background-color: #eceff1;
+    color: var(--text-color);
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+    background-color: #cfd8dc;
+}
+
+.op {
+    background-color: #fff3e0;
+    color: var(--operator-color);
+    font-weight: bold;
+}
+
+.fn {
+    background-color: #e0f2f1;
+    color: var(--primary-dark);
+    font-weight: bold;
+}
+
+.eq {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.8em;
+    grid-column: span 1;
+}
+
+/* ================================================================= */
+/* HISTORY PANEL STYLING */
+/* ================================================================= */
+
+.history-panel {
+    background-color: var(--history-bg);
+    border-radius: 20px;
+    padding: 25px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.history-header h2 {
+    color: var(--text-color);
+    margin: 0;
+}
+
+#clearHistoryBtn {
+    background: none;
+    border: none;
+    color: var(--primary-dark);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+#clearHistoryBtn:hover {
+    opacity: 1;
+}
+
+.history-list {
+    flex-grow: 1;
+    overflow-y: auto; /* Scroll jika riwayat terlalu panjang */
+    padding-right: 5px;
+}
+
+/* Style untuk setiap item riwayat */
+.history-item {
+    padding: 10px 5px;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.history-item:hover {
+    background-color: #e0e0e0;
+}
+
+.history-expression {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.history-result {
+    font-size: 1.2em;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.empty-history {
+    color: #888;
+    text-align: center;
+    margin-top: 50px;
+}
+
+/* ================================================================= */
+/* RESPONSIVE DESIGN */
+/* ================================================================= */
+
+@media (max-width: 900px) {
+    .main-container {
+        flex-direction: column; /* Menumpuk kalkulator dan riwayat */
+        gap: 20px;
+        padding: 0;
+    }
+
+    .calculator, .history-panel {
+        max-width: none;
+        width: auto;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    
+    .calculator {
+        min-height: 100vh;
+        padding-bottom: 40px;
+    }
+
+    .history-panel {
+        /* Memastikan history panel tetap terlihat di bagian bawah */
+        padding-top: 15px; 
+    }
+}
