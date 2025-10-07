@@ -183,23 +183,12 @@ body {
     background-color: #44508d;
 }
 
-/* PENYESUAIAN GRID KHUSUS (Meskipun sudah berurutan di HTML) */
-
-/* Baris 7: n!, 0, ., - */
-/* Karena tombol-tombol ini ditempatkan berurutan di HTML dan grid memiliki 5 kolom, 
-   mereka akan mengisi kolom 1, 2, 3, dan 4 secara otomatis. */
-
-/* Baris 8: 00, 000, backspace, = */
-/* Karena tombol-tombol ini ditempatkan berurutan di HTML,
-   mereka akan mengisi kolom 1, 2, 3, dan 4 secara otomatis di Baris 8. */
-
 /* Tombol Sama Dengan (=) - Ukuran standar, posisi Kolom 4, Baris 8 */
 .eq {
     background-color: var(--primary-color);
     color: white;
     font-size: 2.2em; 
     font-weight: bold;
-    /* Dibiarkan default agar mengambil 1 kolom di Baris 8 */
     box-shadow: 0 5px 15px rgba(0, 188, 212, 0.5);
 }
 
@@ -255,7 +244,7 @@ body {
 }
 
 
-/* MEDIA QUERIES UNTUK RESPONSIF (DIUBAH) */
+/* MEDIA QUERIES UNTUK RESPONSIF (4 kolom) */
 @media (max-width: 550px) {
     .main-container {
         max-width: none;
@@ -273,7 +262,6 @@ body {
         width: 85%;
     }
 
-    /* DIUBAH: Kembali ke 4 kolom untuk mobile */
     .buttons {
         grid-template-columns: repeat(4, 1fr); 
         gap: 10px;
