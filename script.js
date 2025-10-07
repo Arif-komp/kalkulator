@@ -66,6 +66,7 @@ function cleanExpression(expression) {
  */
 function updateDisplay() {
     resultEl.textContent = currentExpression;
+    // Penyesuaian font size agar hasil kombinasi/panjang tetap terbaca
     resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '4.5em';
 }
 
@@ -79,7 +80,7 @@ function updateDisplay() {
 function previewCalculation() {
     let expressionToCalculate = currentExpression;
 
-    // Jangan tampilkan pratinjau jika ekspresi hanya "0"
+    // Jangan tampilkan pratinjau jika ekspresi hanya "0" atau error
     if (expressionToCalculate === '0' || expressionToCalculate === 'Error') {
         historyCurrentEl.textContent = '';
         return;
@@ -216,36 +217,66 @@ function calculate() {
 
 /**
  * Menangani input dari setiap tombol yang diklik.
- * TELAH DIMODIFIKASI untuk memanggil previewCalculation()
+ * TELAH DIMODIFIKASI untuk memanggil previewCalculation() dan menambahkan logika tombol baru.
  */
 function handleButton(value) {
+    
     // 1. CLEAR
     if (value === 'clear') {
         currentExpression = '0';
         historyCurrentEl.textContent = '';
         lastResult = null;
-        updateDisplay(); // Perlu updateDisplay di sini juga
+        updateDisplay(); 
         return;
+    
     // 2. EQUALS
     } else if (value === '=') {
-        // HANYA saat '=' ditekan, kita panggil calculate() yang akan menyimpan riwayat.
         calculate();
         return;
-    // 3. FAKTORIAL
+
+    // 3. BACKSPACE (Tombol BARU)
+    } else if (value === 'backspace') {
+        if (currentExpression === 'Error' || currentExpression === '0') return;
+        
+        // Jika hasil terakhir ditampilkan, hapus hasil dan kembali ke 0
+        if (lastResult !== null) {
+            currentExpression = '0';
+            lastResult = null;
+        } else {
+            // Hapus satu karakter terakhir
+            currentExpression = currentExpression.slice(0, -1);
+            if (currentExpression.length === 0) {
+                 currentExpression = '0';
+            }
+        }
+        // Pastikan currentExpression dalam format yang benar setelah backspace
+        currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
+        
+        updateDisplay();
+        previewCalculation();
+        return;
+
+    // 4. FAKTORIAL
     } else if (value === 'fact') {
          if (/[0-9)]/.test(currentExpression.slice(-1))) {
              currentExpression += '!';
          }
-    // 4. ANGKA DAN OPERATOR LAIN
+    
+    // 5. ANGKA, OPERATOR, & TOMBOL BARU LAINNYA (+, 00, 000)
     } else {
+        const isOperator = /[+\-*/ MOD()^]/.test(value) || value.includes('(');
+        
+        // Menangani kasus setelah perhitungan (lastResult)
         if (lastResult !== null && lastResult !== undefined) {
-             if (/[+\-*/ MOD()^]/.test(value) || value.includes('(')) {
+             if (isOperator) {
                  currentExpression = String(lastResult) + value;
              } else {
                  currentExpression = value;
              }
              lastResult = null;
              historyCurrentEl.textContent = '';
+        
+        // Menangani input normal
         } else {
              if (currentExpression === '0' && value !== '.') {
                  currentExpression = value;
@@ -255,14 +286,13 @@ function handleButton(value) {
         }
     }
     
-    // 5. Normalisasi tampilan
+    // 6. Normalisasi tampilan
     currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
 
     // Tampilkan ekspresi yang sedang diketik
     updateDisplay();
     
-    // 6. Pratinjau hasil (Live Score)
-    // Panggil fungsi pratinjau setelah setiap tombol input (kecuali clear dan =)
+    // 7. Pratinjau hasil (Live Score)
     previewCalculation(); 
 }
 
@@ -335,9 +365,9 @@ function processVoiceCommand(command) {
 
     // 2. Mengubah angka dalam bentuk kata
     expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3')
-                         .replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6')
-                         .replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9')
-                         .replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
+                             .replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6')
+                             .replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9')
+                             .replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
     // 3. Perintah Khusus
     if (expression.includes('hapus') || expression.includes('clear')) {
@@ -437,8 +467,8 @@ function renderHistory() {
 
         // Tampilkan hasil kombinasi yang mudah dibaca
         if (record.combination) {
-              expressionText = record.combination.finalExpression;
-              resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'tambah' : 'kurang'} ${Math.abs(record.combination.Y)})`;
+             expressionText = record.combination.finalExpression;
+             resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'tambah' : 'kurang'} ${Math.abs(record.combination.Y)})`;
         }
         
         item.innerHTML = `
@@ -486,9 +516,9 @@ buttons.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn')) {
         const value = e.target.getAttribute('data-value');
         if (value === 'module') {
-              handleButton(' MOD ');
+             handleButton(' MOD ');
         } else {
-              handleButton(value);
+             handleButton(value);
         }
     }
 });
