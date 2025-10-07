@@ -71,16 +71,14 @@ function updateDisplay() {
 }
 
 // -------------------------------------------------------------
-// FUNGSI BARU: Pratinjau Perhitungan (Live Score)
+// FUNGSI: Pratinjau Perhitungan (Live Score)
 // -------------------------------------------------------------
 /**
  * Melakukan perhitungan ekspresi saat ini dan menampilkannya di historyCurrentEl
- * tanpa mengubah currentExpression atau historyRecords.
  */
 function previewCalculation() {
     let expressionToCalculate = currentExpression;
 
-    // Jangan tampilkan pratinjau jika ekspresi hanya "0" atau error
     if (expressionToCalculate === '0' || expressionToCalculate === 'Error') {
         historyCurrentEl.textContent = '';
         return;
@@ -92,13 +90,11 @@ function previewCalculation() {
         return;
     }
 
-    // Hanya preview untuk operasi standar (tidak termasuk kombinasi/tujuan)
     if (isSolvingEquation) return; 
 
     try {
         const expression = cleanExpression(expressionToCalculate);
         
-        // Coba evaluasi, jika ada error (misal: kurung belum ditutup), abaikan
         let calculatedResult = (new Function('return ' + expression))();
         
         if (!isFinite(calculatedResult)) {
@@ -106,25 +102,19 @@ function previewCalculation() {
             return;
         }
 
-        // Pembulatan standar untuk pratinjau
         calculatedResult = parseFloat(calculatedResult.toFixed(10));
         let formattedResult = String(calculatedResult);
         
-        // Tampilkan pratinjau di elemen historyCurrentEl
         historyCurrentEl.textContent = formattedResult;
 
     } catch (error) {
-        // Abaikan error sintaks selama input (misal: "1+")
         historyCurrentEl.textContent = expressionToCalculate + '...'; 
     }
 }
 // -------------------------------------------------------------
-// AKHIR FUNGSI BARU
-// -------------------------------------------------------------
 
 /**
  * Melakukan perhitungan ekspresi saat ini.
- * (Fungsi calculate() ini TETAP bertanggung jawab untuk hasil AKHIR dan RIWAYAT)
  */
 function calculate() {
     let expressionToCalculate = currentExpression;
@@ -140,27 +130,23 @@ function calculate() {
              throw new Error("Invalid Calculation");
         }
 
-        // =========================================================
-        // LOGIKA KOMBINASI DAN PEMBULATAN CERDAS
-        // =========================================================
         let formattedResult;
         let combinationDetails = null;
 
+        // LOGIKA KOMBINASI KHUSUS
         if (isSolvingEquation && calculatedResult % 1 !== 0) {
             
             let X = Math.round(calculatedResult);
             let Y = 0;
             let finalExpression = expressionToCalculate;
 
-            // Logika hanya berlaku untuk operasi pembagian yang dihasilkan dari masalah kombinasi
             if (expressionToCalculate.includes('/') && targetValue !== null && inputNumber !== null) {
                 
                 let actualResult = X * inputNumber;
                 Y = targetValue - actualResult;
                 
-                // Ekspresi kombinasi yang mudah dibaca
                 finalExpression = `${inputNumber} × ${X} ${Y >= 0 ? '+' : '-'} ${Math.abs(Y)}`;
-                formattedResult = `${X}`; // Nilai X yang dibulatkan
+                formattedResult = `${X}`; 
 
                 combinationDetails = {
                     X: X,
@@ -172,16 +158,14 @@ function calculate() {
             }
             
             if (combinationDetails === null) {
-                // Jika bukan kasus kombinasi, gunakan pembulatan sederhana
                  X = Math.round(calculatedResult);
                  formattedResult = String(X);
             }
             
-            // Masukkan hasil ke riwayat
             addToHistory(finalExpression, formattedResult, combinationDetails, calculatedResult);
 
         } else {
-            // Logika standar untuk perhitungan langsung
+            // Logika standar
             calculatedResult = parseFloat(calculatedResult.toFixed(10));
             formattedResult = String(calculatedResult);
             addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
@@ -191,10 +175,8 @@ function calculate() {
         historyCurrentEl.textContent = expressionToCalculate + ' =';
         lastResult = calculatedResult;
         
-        // Tampilkan jawaban kombinasi di layar utama jika ada
         if (combinationDetails) {
             resultEl.textContent = combinationDetails.X;
-            // Tampilkan rincian kombinasi di atas hasil utama
             historyCurrentEl.textContent = `Pilihan Bulat: ${combinationDetails.finalExpression} = ${combinationDetails.target}`;
         } else {
              currentExpression = formattedResult;
@@ -209,7 +191,7 @@ function calculate() {
         updateDisplay();
         console.error("Calculation Error:", error);
     } finally {
-        isSolvingEquation = false; // Reset flag
+        isSolvingEquation = false; 
         targetValue = null;
         inputNumber = null;
     }
@@ -217,7 +199,6 @@ function calculate() {
 
 /**
  * Menangani input dari setiap tombol yang diklik.
- * TELAH DIMODIFIKASI untuk memanggil previewCalculation() dan menambahkan logika tombol baru.
  */
 function handleButton(value) {
     
@@ -234,12 +215,12 @@ function handleButton(value) {
         calculate();
         return;
 
-    // 3. BACKSPACE (Tombol BARU)
+    // 3. BACKSPACE (Pengecekan di awal untuk responsivitas)
     } else if (value === 'backspace') {
-        if (currentExpression === 'Error' || currentExpression === '0') return;
-        
-        // Jika hasil terakhir ditampilkan, hapus hasil dan kembali ke 0
-        if (lastResult !== null) {
+        if (currentExpression === 'Error') {
+             currentExpression = '0';
+        } else if (lastResult !== null) {
+            // Jika hasil terakhir ditampilkan, hapus hasil dan kembali ke 0
             currentExpression = '0';
             lastResult = null;
         } else {
@@ -249,7 +230,7 @@ function handleButton(value) {
                  currentExpression = '0';
             }
         }
-        // Pastikan currentExpression dalam format yang benar setelah backspace
+        
         currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
         
         updateDisplay();
@@ -262,11 +243,10 @@ function handleButton(value) {
              currentExpression += '!';
          }
     
-    // 5. ANGKA, OPERATOR, & TOMBOL BARU LAINNYA (+, 00, 000)
+    // 5. ANGKA, OPERATOR, & LAINNYA
     } else {
-        const isOperator = /[+\-*/ MOD()^]/.test(value) || value.includes('(');
+        const isOperator = /[+\-×÷ MOD()^]/.test(value) || value.includes('(');
         
-        // Menangani kasus setelah perhitungan (lastResult)
         if (lastResult !== null && lastResult !== undefined) {
              if (isOperator) {
                  currentExpression = String(lastResult) + value;
@@ -276,7 +256,6 @@ function handleButton(value) {
              lastResult = null;
              historyCurrentEl.textContent = '';
         
-        // Menangani input normal
         } else {
              if (currentExpression === '0' && value !== '.') {
                  currentExpression = value;
@@ -289,7 +268,6 @@ function handleButton(value) {
     // 6. Normalisasi tampilan
     currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
 
-    // Tampilkan ekspresi yang sedang diketik
     updateDisplay();
     
     // 7. Pratinjau hasil (Live Score)
@@ -300,7 +278,6 @@ function handleButton(value) {
 // LOGIKA INPUT SUARA
 // =================================================================
 
-// ... (Kode untuk Speech Recognition tetap sama) ...
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 
@@ -348,7 +325,6 @@ function processVoiceCommand(command) {
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
     
-    // 1. Mengganti kata-kata ilmiah dan operator
     expression = expression
         .replace(/akar kuadrat|akar/g, 'sqrt(')
         .replace(/pangkat/g, '^')
@@ -363,22 +339,17 @@ function processVoiceCommand(command) {
         .replace(/bagi|dibagi|per/g, '/')
         .replace(/modulus|modulo|sisa bagi/g, ' MOD ');
 
-    // 2. Mengubah angka dalam bentuk kata
     expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3')
                              .replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6')
                              .replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9')
                              .replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
-    // 3. Perintah Khusus
     if (expression.includes('hapus') || expression.includes('clear')) {
         handleButton('clear');
         return;
     }
     
-    // 4. Analisis Frasa Fleksibel BARU (Pola Pendek: "15 ke 500")
     const simpleFlexMatch = command.match(/(\d+(\.\d+)?)\s+(ke|buat|jadi)\s+(\d+(\.\d+)?)/i);
-    
-    // Analisis Frasa Fleksibel LAMA (Pola Panjang: "15 diapakan agar hasilnya 500")
     const complexFlexMatch = command.match(/(\d+(\.\d+)?)\s+diapakan\s+agar\s+hasilnya\s+(\d+(\.\d+)?)/i);
 
     let match = simpleFlexMatch || complexFlexMatch;
@@ -386,24 +357,19 @@ function processVoiceCommand(command) {
     if (match) {
         
         let num1, num2;
-
         if (simpleFlexMatch) {
-            // Untuk pola pendek: [Angka Input] [ke/buat/jadi] [Angka Target]
             num1 = match[1];
             num2 = match[4];
         } else {
-             // Untuk pola panjang: [Angka Input] diapakan agar hasilnya [Angka Target]
             num1 = match[1];
             num2 = match[4];
         }
 
-        // Atur variabel global untuk dipakai di fungsi calculate()
         inputNumber = parseFloat(num1);
         targetValue = parseFloat(num2);
 
-        isSolvingEquation = true; // Set flag untuk mengaktifkan logika kombinasi
+        isSolvingEquation = true; 
         
-        // Ekspresi yang akan dihitung adalah pembagian sederhana (sebagai basis pencarian)
         let solvedExpression = `${num2} / ${num1}`;
         
         historyCurrentEl.textContent = `Pencarian Kombinasi: ${command} -> ${solvedExpression}`;
@@ -413,7 +379,6 @@ function processVoiceCommand(command) {
         return;
     }
     
-    // 5. Jika bukan frasa fleksibel, lakukan perhitungan langsung
     let cleanSpeech = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
     cleanSpeech = cleanSpeech.replace(/\s+/g, '');
     
@@ -465,7 +430,6 @@ function renderHistory() {
         let expressionText = record.expression;
         let resultText = record.result;
 
-        // Tampilkan hasil kombinasi yang mudah dibaca
         if (record.combination) {
              expressionText = record.combination.finalExpression;
              resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'tambah' : 'kurang'} ${Math.abs(record.combination.Y)})`;
@@ -477,7 +441,6 @@ function renderHistory() {
         `;
 
         item.addEventListener('click', () => {
-            // Saat diklik, gunakan hasil yang dibulatkan (X) jika ada kombinasi, atau hasil biasa
             if (record.combination) {
                 currentExpression = String(record.combination.X);
                 historyCurrentEl.textContent = `Jawaban: ${expressionText} = ${record.combination.target}`;
@@ -511,10 +474,18 @@ clearHistoryBtn.addEventListener('click', () => {
     renderHistory();
 });
 
-// Event listener untuk tombol di layar
+// Event listener untuk tombol di layar (DIKOREKSI UNTUK RESPONSIVITAS BACKSPACE)
 buttons.addEventListener('click', (e) => {
-    if (e.target.classList.contains('btn')) {
-        const value = e.target.getAttribute('data-value');
+    let target = e.target;
+    
+    // Gunakan .closest() untuk memastikan event dipicu oleh tombol induk (.btn), 
+    // bahkan jika user mengklik ikon (span) di dalamnya.
+    if (!target.classList.contains('btn')) {
+        target = target.closest('.btn');
+    }
+
+    if (target) {
+        const value = target.getAttribute('data-value');
         if (value === 'module') {
              handleButton(' MOD ');
         } else {
