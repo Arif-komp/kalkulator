@@ -122,14 +122,13 @@ body {
 /* Tombol Kalkulator */
 .buttons {
     display: grid;
-    /* DIUBAH: Menggunakan 5 kolom */
+    /* MENGGUNAKAN 5 KOLOM (DEFAULT DESKTOP) */
     grid-template-columns: repeat(5, 1fr); 
     gap: 15px; 
 }
 
-/* Penyesuaian untuk sel kosong yang ditambahkan di HTML */
 .empty-cell {
-    display: none; /* Sembunyikan sel kosong di desktop */
+    display: none; 
 }
 
 .btn {
@@ -141,7 +140,6 @@ body {
     transition: background-color 0.2s, box-shadow 0.1s, transform 0.1s;
     font-weight: 500;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1); 
-    /* Mengatasi tombol '=' agar tidak ikut gaya ini di baris terakhir */
     min-height: 60px; 
 }
 
@@ -185,31 +183,27 @@ body {
     background-color: #44508d;
 }
 
-/* MODIFIKASI GRID DAN TOMBOL BARU */
+/* PENYESUAIAN GRID KHUSUS (Meskipun sudah berurutan di HTML) */
 
-/* Baris 7: n!, 0, ., backspace */
-/* Semua tombol di baris 7 akan mengambil 1 kolom penuh */
+/* Baris 7: n!, 0, ., - */
+/* Karena tombol-tombol ini ditempatkan berurutan di HTML dan grid memiliki 5 kolom, 
+   mereka akan mengisi kolom 1, 2, 3, dan 4 secara otomatis. */
 
-/* Baris 8: 00, 000, = */
-.buttons button[data-value="00"] {
-    grid-column: 1 / span 1;
-}
+/* Baris 8: 00, 000, backspace, = */
+/* Karena tombol-tombol ini ditempatkan berurutan di HTML,
+   mereka akan mengisi kolom 1, 2, 3, dan 4 secara otomatis di Baris 8. */
 
-.buttons button[data-value="000"] {
-    grid-column: 2 / span 1;
-}
-
-/* Tombol Sama Dengan - Mengambil 3 kolom terakhir */
+/* Tombol Sama Dengan (=) - Ukuran standar, posisi Kolom 4, Baris 8 */
 .eq {
     background-color: var(--primary-color);
     color: white;
     font-size: 2.2em; 
     font-weight: bold;
-    grid-column: 3 / span 3; 
+    /* Dibiarkan default agar mengambil 1 kolom di Baris 8 */
     box-shadow: 0 5px 15px rgba(0, 188, 212, 0.5);
 }
 
-/* HISTORY PANEL & OVERLAY (Gaya tidak berubah) */
+/* HISTORY PANEL & OVERLAY (Gaya standar) */
 .history-panel {
     position: fixed; 
     top: 0;
@@ -279,33 +273,27 @@ body {
         width: 85%;
     }
 
-    /* DIUBAH: Menggunakan 4 kolom untuk mobile */
+    /* DIUBAH: Kembali ke 4 kolom untuk mobile */
     .buttons {
         grid-template-columns: repeat(4, 1fr); 
         gap: 10px;
     }
-    .empty-cell {
-        /* Sembunyikan sel kosong yang seharusnya di kolom ke-5 */
-        display: none;
-    }
     
-    /* Tombol Penjumlahan (+) dipindahkan ke kolom 4 Baris 6 */
+    /* Tombol Penjumlahan (+) */
     .buttons button[data-value="+"] { 
         grid-column: 4 / span 1;
         grid-row: 6;
     }
-    .buttons button[data-value="-"] {
-        grid-column: 3 / span 1;
-    }
     
-    /* Penyesuaian posisi Baris 7 (Faktorial, 0, ., Backspace) */
+    /* BARIS 7: n!, 0, ., - */
     .buttons button[data-value="fact"] { grid-column: 1 / span 1; grid-row: 7; }
     .buttons button[data-value="0"] { grid-column: 2 / span 1; grid-row: 7; }
     .buttons button[data-value="."] { grid-column: 3 / span 1; grid-row: 7; }
-    .buttons button[data-value="backspace"] { grid-column: 4 / span 1; grid-row: 7; }
+    .buttons button[data-value="-"] { grid-column: 4 / span 1; grid-row: 7; }
 
-    /* Penyesuaian posisi Baris 8 (00, 000, =) */
+    /* BARIS 8: 00, 000, backspace, = */
     .buttons button[data-value="00"] { grid-column: 1 / span 1; grid-row: 8; }
     .buttons button[data-value="000"] { grid-column: 2 / span 1; grid-row: 8; }
-    .eq { grid-column: 3 / span 2; grid-row: 8; } /* Diperlebar di mobile */
+    .buttons button[data-value="backspace"] { grid-column: 3 / span 1; grid-row: 8; }
+    .eq { grid-column: 4 / span 1; grid-row: 8; } 
 }
