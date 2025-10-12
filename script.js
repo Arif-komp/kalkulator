@@ -81,12 +81,10 @@ function cleanExpression(expression) {
         .replace(/cos\(/g, 'Math.cos(')
         .replace(/tan\(/g, 'Math.tan(')
         .replace(/log\(/g, 'Math.log10(') // log() = log basis 10
-        .replace(/ln\(/g, 'Math.log(')   // ln() = log basis e (natural log) - Tidak ada di tombol
         .replace(/sqrt\(/g, 'Math.sqrt(')
         .replace(/pi/g, 'Math.PI')
         .replace(/e/g, 'Math.E');
 
-    // Menangani faktorial: mengubah "N!" menjadi "factorial(N)"
     cleaned = cleaned.replace(/(\d+(\.\d+)?)!/g, (match, p1) => `factorial(${p1})`);
     
     return cleaned;
@@ -97,7 +95,6 @@ function cleanExpression(expression) {
  */
 function updateDisplay() {
     resultEl.textContent = currentExpression;
-    // Penyesuaian font size agar hasil kombinasi/panjang tetap terbaca
     resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '3.5em';
 }
 
@@ -112,7 +109,6 @@ function previewCalculation() {
         return;
     }
     
-    // Jangan pratinjau jika ekspresi berakhir dengan operator
     if (/[+\-×÷ MOD\^()]$/.test(expressionToCalculate.slice(-1))) {
         historyCurrentEl.textContent = expressionToCalculate + '...';
         return;
@@ -123,7 +119,6 @@ function previewCalculation() {
     try {
         const expression = cleanExpression(expressionToCalculate);
         
-        // Menggunakan new Function() untuk evaluasi yang lebih aman dari eval()
         let calculatedResult = (new Function('return ' + expression))();
         
         if (!isFinite(calculatedResult)) {
@@ -131,14 +126,12 @@ function previewCalculation() {
             return;
         }
 
-        // Pembulatan untuk menghindari floating point error yang panjang
         calculatedResult = parseFloat(calculatedResult.toFixed(10)); 
         let formattedResult = String(calculatedResult);
         
         historyCurrentEl.textContent = ' = ' + formattedResult;
 
     } catch (error) {
-        // Abaikan error sintaks yang belum lengkap (misal: sin(1+))
         historyCurrentEl.textContent = expressionToCalculate + '...'; 
     }
 }
@@ -163,7 +156,7 @@ function calculate() {
         let formattedResult;
         let combinationDetails = null;
 
-        // --- LOGIKA KOMBINASI KHUSUS (Flex Match dari input suara) ---
+        // --- LOGIKA KOMBINASI KHUSUS (Flex Match) ---
         if (isSolvingEquation && calculatedResult % 1 !== 0) {
             
             let X = Math.round(calculatedResult);
@@ -175,7 +168,6 @@ function calculate() {
                 let actualResult = X * inputNumber;
                 Y = targetValue - actualResult;
                 
-                // Ekspresi yang ditampilkan untuk riwayat
                 finalExpression = `${inputNumber} × ${X} ${Y >= 0 ? '+' : '-'} ${Math.abs(Y)}`;
                 formattedResult = `${X}`; 
 
@@ -345,7 +337,6 @@ if (SpeechRecognition) {
         }
     });
 } else {
-    // Sembunyikan mic button jika API tidak didukung
     micBtn.style.display = 'none';
 }
 
@@ -445,7 +436,6 @@ function renderHistory() {
         return;
     }
 
-    // Tampilkan riwayat dari yang terbaru (reverse)
     historyRecords.slice().reverse().forEach((record) => {
         const item = document.createElement('div');
         item.classList.add('history-item');
@@ -491,7 +481,6 @@ clearHistoryBtn.addEventListener('click', () => {
 buttons.addEventListener('click', (e) => {
     let target = e.target;
     
-    // Gunakan .closest() untuk menangani klik pada ikon di dalam tombol
     if (!target.classList.contains('btn')) {
         target = target.closest('.btn');
     }
@@ -511,6 +500,5 @@ buttons.addEventListener('click', (e) => {
 // INISIALISASI AKHIR
 // =================================================================
 
-// Panggil loadHistory untuk memuat data dan merender riwayat saat aplikasi dimuat
 loadHistory(); 
 updateDisplay();
