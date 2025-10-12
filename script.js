@@ -16,7 +16,7 @@ const overlay = document.getElementById('overlay');
 
 let currentExpression = '0';
 let lastResult = null;
-let historyRecords = []; // Diisi dari LocalStorage saat loadHistory dipanggil
+let historyRecords = []; 
 let isSolvingEquation = false;
 let targetValue = null;
 let inputNumber = null;
@@ -25,9 +25,6 @@ let inputNumber = null;
 // FUNGSI PERSISTENSI RIWAYAT (LocalStorage)
 // =================================================================
 
-/**
- * Memuat riwayat dari LocalStorage saat kalkulator dimuat.
- */
 function loadHistory() {
     const storedHistory = localStorage.getItem('calculatorHistory');
     if (storedHistory) {
@@ -41,9 +38,6 @@ function loadHistory() {
     renderHistory();
 }
 
-/**
- * Menyimpan riwayat saat ini ke LocalStorage.
- */
 function saveHistory() {
     localStorage.setItem('calculatorHistory', JSON.stringify(historyRecords));
 }
@@ -52,9 +46,6 @@ function saveHistory() {
 // FUNGSI MATEMATIKA & UTILITY
 // =================================================================
 
-/**
- * Fungsi untuk menghitung faktorial (n!)
- */
 function factorial(n) {
     if (n < 0) return NaN;
     if (n === 0) return 1;
@@ -66,9 +57,6 @@ function factorial(n) {
     return result;
 }
 
-/**
- * Mengkonversi ekspresi yang mudah dibaca pengguna menjadi ekspresi JS yang dapat dievaluasi.
- */
 function cleanExpression(expression) {
     let cleaned = expression
         .replace(/÷/g, '/')
@@ -80,7 +68,7 @@ function cleanExpression(expression) {
         .replace(/sin\(/g, 'Math.sin(')
         .replace(/cos\(/g, 'Math.cos(')
         .replace(/tan\(/g, 'Math.tan(')
-        .replace(/log\(/g, 'Math.log10(') // log() = log basis 10
+        .replace(/log\(/g, 'Math.log10(')
         .replace(/sqrt\(/g, 'Math.sqrt(')
         .replace(/pi/g, 'Math.PI')
         .replace(/e/g, 'Math.E');
@@ -90,17 +78,11 @@ function cleanExpression(expression) {
     return cleaned;
 }
 
-/**
- * Memperbarui tampilan hasil di layar kalkulator.
- */
 function updateDisplay() {
     resultEl.textContent = currentExpression;
     resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '3.5em';
 }
 
-/**
- * Melakukan perhitungan ekspresi saat ini dan menampilkannya di historyCurrentEl (Live Score)
- */
 function previewCalculation() {
     let expressionToCalculate = currentExpression;
 
@@ -136,9 +118,6 @@ function previewCalculation() {
     }
 }
 
-/**
- * Melakukan perhitungan ekspresi saat ini (tombol '=')
- */
 function calculate() {
     let expressionToCalculate = currentExpression;
 
@@ -156,7 +135,6 @@ function calculate() {
         let formattedResult;
         let combinationDetails = null;
 
-        // --- LOGIKA KOMBINASI KHUSUS (Flex Match) ---
         if (isSolvingEquation && calculatedResult % 1 !== 0) {
             
             let X = Math.round(calculatedResult);
@@ -188,12 +166,10 @@ function calculate() {
             addToHistory(expressionToCalculate, formattedResult, combinationDetails, calculatedResult);
 
         } else {
-            // Logika standar
             calculatedResult = parseFloat(calculatedResult.toFixed(10));
             formattedResult = String(calculatedResult);
             addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
         }
-        // ----------------------------------------------------------------
 
         historyCurrentEl.textContent = expressionToCalculate + ' =';
         lastResult = calculatedResult;
@@ -220,12 +196,22 @@ function calculate() {
     }
 }
 
-/**
- * Menangani input dari setiap tombol yang diklik.
- */
+function addToHistory(expression, result, combination = null, originalResult = null) {
+    if (expression !== 'Error' && expression !== '0') {
+        historyRecords.push({
+            expression: expression,
+            result: result,
+            combination: combination,
+            originalResult: originalResult || result
+        });
+        saveHistory(); 
+        renderHistory();
+    }
+}
+
+
 function handleButton(value) {
     
-    // 1. CLEAR
     if (value === 'clear') {
         currentExpression = '0';
         historyCurrentEl.textContent = '';
@@ -233,12 +219,10 @@ function handleButton(value) {
         updateDisplay(); 
         return;
     
-    // 2. EQUALS
     } else if (value === '=') {
         calculate();
         return;
 
-    // 3. BACKSPACE
     } else if (value === 'backspace') {
         if (currentExpression === 'Error') {
              currentExpression = '0';
@@ -258,13 +242,11 @@ function handleButton(value) {
         previewCalculation();
         return;
 
-    // 4. FAKTORIAL
     } else if (value === 'fact') {
           if (/[0-9)]/.test(currentExpression.slice(-1))) {
               currentExpression += '!';
           }
     
-    // 5. ANGKA, OPERATOR, & LAINNYA
     } else {
         const isOperator = /[+\-×÷ MOD()^]/.test(value) || value.includes('(');
         
@@ -286,105 +268,48 @@ function handleButton(value) {
         }
     }
     
-    // 6. Normalisasi tampilan
     currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
 
     updateDisplay();
-    
-    // 7. Pratinjau hasil (Live Score)
     previewCalculation(); 
 }
 
 // =================================================================
-// LOGIKA INPUT SUARA
+// LOGIKA INPUT SUARA (Tidak Berubah)
 // =================================================================
-
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
-
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
     recognition.lang = 'id-ID';
     recognition.continuous = false;
     recognition.interimResults = false;
-
-    recognition.onstart = () => {
-        micBtn.innerHTML = '<span class="material-icons">mic</span> Mendengarkan...';
-        micBtn.classList.add('listening');
-    };
-
-    recognition.onend = () => {
-        micBtn.innerHTML = '<span class="material-icons">mic</span>';
-        micBtn.classList.remove('listening');
-    };
-
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        processVoiceCommand(transcript);
-    };
-
-    recognition.onerror = (event) => {
-        console.error("Kesalahan Pengenalan Suara:", event.error);
-        micBtn.innerHTML = '<span class="material-icons">mic</span> Error';
-        micBtn.classList.remove('listening');
-    };
-
-    micBtn.addEventListener('click', () => {
-        try {
-            recognition.start();
-        } catch (e) {
-            console.warn("Recognition already started or error in browser support.", e);
-        }
-    });
-} else {
-    micBtn.style.display = 'none';
-}
+    recognition.onstart = () => { micBtn.innerHTML = '<span class="material-icons">mic</span> Mendengarkan...'; micBtn.classList.add('listening'); };
+    recognition.onend = () => { micBtn.innerHTML = '<span class="material-icons">mic</span>'; micBtn.classList.remove('listening'); };
+    recognition.onresult = (event) => { processVoiceCommand(event.results[0][0].transcript.toLowerCase()); };
+    recognition.onerror = (event) => { console.error("Kesalahan Pengenalan Suara:", event.error); micBtn.innerHTML = '<span class="material-icons">mic</span> Error'; micBtn.classList.remove('listening'); };
+    micBtn.addEventListener('click', () => { try { recognition.start(); } catch (e) { console.warn("Recognition already started or error in browser support.", e); } });
+} else { micBtn.style.display = 'none'; }
 
 function processVoiceCommand(command) {
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
     
-    // Ganti kata-kata dengan simbol
-    expression = expression
-        .replace(/akar kuadrat|akar/g, 'sqrt(')
-        .replace(/pangkat/g, '^')
-        .replace(/sinus/g, 'sin(')
-        .replace(/kosinus/g, 'cos(')
-        .replace(/tangen/g, 'tan(')
-        .replace(/logaritma/g, 'log(')
-        .replace(/faktorial/g, '!')
-        .replace(/tambah|plus/g, '+')
-        .replace(/kurang|minus|kurangi/g, '-')
-        .replace(/kali|dikali|perkalian|x/g, '*')
-        .replace(/bagi|dibagi|per/g, '/')
-        .replace(/modulus|modulo|sisa bagi/g, ' MOD ');
+    expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(').replace(/pangkat/g, '^').replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(').replace(/logaritma/g, 'log(').replace(/faktorial/g, '!').replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-').replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/').replace(/modulus|modulo|sisa bagi/g, ' MOD ');
+    expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3').replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6').replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9').replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
-    // Ganti angka terucap
-    expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3')
-                             .replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6')
-                             .replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9')
-                             .replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
-
-    if (expression.includes('hapus') || expression.includes('clear')) {
-        handleButton('clear');
-        return;
-    }
+    if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
     
-    // Logika Flex Match (Contoh: "10 ke 3")
     const simpleFlexMatch = command.match(/(\d+(\.\d+)?)\s+(ke|buat|jadi)\s+(\d+(\.\d+)?)/i);
     let match = simpleFlexMatch;
 
     if (match) {
         let num1 = match[1];
         let num2 = match[4];
-
         inputNumber = parseFloat(num1);
         targetValue = parseFloat(num2);
-
         isSolvingEquation = true; 
-        
         let solvedExpression = `${num2} / ${num1}`;
-        
         historyCurrentEl.textContent = `Pencarian Kombinasi: ${num1} ke ${num2} -> ${solvedExpression}`;
         currentExpression = solvedExpression;
         updateDisplay();
@@ -396,14 +321,11 @@ function processVoiceCommand(command) {
     cleanSpeech = cleanSpeech.replace(/\s+/g, '');
     
     if (cleanSpeech.length > 0) {
-        currentExpression = cleanSpeech
-            .replace(/\*/g, '×').replace(/\//g, '÷').replace(/\^/g, '^').replace(/MOD/g, ' MOD ');
-        
+        currentExpression = cleanSpeech.replace(/\*/g, '×').replace(/\//g, '÷').replace(/\^/g, '^').replace(/MOD/g, ' MOD ');
         updateDisplay();
         calculate();
     }
 }
-
 
 // =================================================================
 // LOGIKA RIWAYAT & MENU
@@ -470,28 +392,18 @@ function renderHistory() {
     });
 }
 
-
 clearHistoryBtn.addEventListener('click', () => {
     historyRecords = [];
-    localStorage.removeItem('calculatorHistory'); // Hapus dari LocalStorage
+    localStorage.removeItem('calculatorHistory'); 
     renderHistory();
 });
 
-// Event listener untuk tombol di layar
 buttons.addEventListener('click', (e) => {
     let target = e.target;
-    
-    if (!target.classList.contains('btn')) {
-        target = target.closest('.btn');
-    }
-
+    if (!target.classList.contains('btn')) { target = target.closest('.btn'); }
     if (target) {
         const value = target.getAttribute('data-value');
-        if (value === 'module') {
-             handleButton(' MOD ');
-        } else {
-             handleButton(value);
-        }
+        if (value === 'module') { handleButton(' MOD '); } else { handleButton(value); }
     }
 });
 
