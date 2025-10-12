@@ -220,3 +220,68 @@ body {
     /* Cukup dengan menghapus properti grid-column/grid-row yang mengganggu dan membiarkan grid mengalir. */
     /* Pastikan urutan HTML-nya sudah benar (Sci functions di atas) */
 }
+/* --- Tambahan/Modifikasi untuk HISTORY PANEL --- */
+
+/* Memastikan riwayat menggunakan flexbox untuk tata letak yang bersih */
+.history-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    /* Tambahkan scrollbar yang lebih rapi jika memungkinkan */
+    padding-right: 10px; /* Ruang untuk scrollbar */
+}
+
+/* Gaya untuk setiap item riwayat */
+.history-item {
+    padding: 10px 5px;
+    border-bottom: 1px solid #eee; /* Sekat pemisah yang lembut */
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-align: right;
+}
+
+.history-item:last-child {
+    border-bottom: none; /* Hilangkan sekat pada item terakhir */
+}
+
+.history-item:hover {
+    background-color: #e0f7fa; /* Warna hover yang sama dengan fungsi */
+}
+
+/* Gaya untuk ekspresi perhitungan (baris atas) */
+.history-expression {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 3px;
+    word-wrap: break-word; /* Memecah baris jika terlalu panjang */
+    white-space: normal;
+}
+
+/* Gaya untuk hasil perhitungan (baris bawah) */
+.history-result {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: var(--text-color);
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+/* Gaya untuk teks "Belum ada perhitungan" */
+.empty-history {
+    color: #999;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Perbaikan tombol hapus riwayat */
+#clearHistoryBtn {
+    background: none;
+    border: none;
+    color: var(--primary-dark);
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+#clearHistoryBtn:hover {
+    color: #e53935; /* Warna merah saat di-hover */
+}
