@@ -24,6 +24,8 @@ body {
     padding: 0;
     box-sizing: border-box;
     overflow-x: hidden;
+    /* Tambahkan properti untuk sensitivitas sentuhan */
+    -webkit-tap-highlight-color: transparent; 
 }
 
 .main-container {
@@ -104,13 +106,9 @@ body {
 /* --- Tombol Kalkulator (Grid) --- */
 .buttons {
     display: grid;
-    /* Tampilan Default Desktop: 5 kolom (4 Dasar + 1 Ilmiah) */
+    /* Tampilan Default Desktop: 5 kolom (Fungsi Ilmiah + Dasar) */
     grid-template-columns: repeat(5, 1fr); 
     gap: 10px; 
-}
-
-.empty-cell {
-    display: none; /* Dihapus dari HTML, tapi tetap didefinisikan untuk jaga-jaga */
 }
 
 .btn {
@@ -119,15 +117,18 @@ body {
     border: none;
     border-radius: 10px; 
     cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.1s, transform 0.1s;
+    /* Sensitivitas: Transisi cepat */
+    transition: background-color 0.05s, box-shadow 0.05s, transform 0.05s; 
     font-weight: 500;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
     min-height: 50px; 
 }
 
+/* Sensitivitas: Tombol ditekan */
 .btn:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transform: translateY(0.5px); /* Gerakan minimal */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); /* Bayangan sedikit lebih gelap */
+    filter: brightness(0.95); /* Sedikit redup */
 }
 
 .btn.fn span.material-icons { font-size: 1.2em; }
@@ -162,104 +163,115 @@ body {
     font-size: 1.6em; 
 }
 
-/* --- HISTORY PANEL & OVERLAY --- */
+/* --- HISTORY PANEL (Tidak berubah) --- */
 .history-panel {
     position: fixed; top: 0; right: 0; height: 100%; width: var(--history-width);
     background-color: var(--history-bg); box-shadow: -8px 0 20px rgba(0, 0, 0, 0.3);
     transform: translateX(100%); transition: transform 0.3s ease-in-out;
     padding: var(--padding-base); z-index: 1000; display: flex; flex-direction: column;
 }
-
 .history-panel.open { transform: translateX(0); }
 .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.history-list { 
-    flex-grow: 1;
-    overflow-y: auto;
-    padding-right: 10px; /* Ruang untuk scrollbar */
-}
-
-/* Gaya item riwayat */
-.history-item {
-    padding: 10px 5px;
-    border-bottom: 1px solid #eee; /* Sekat pemisah yang lembut */
-    cursor: pointer;
-    transition: background-color 0.2s;
-    text-align: right;
-}
-
+.history-list { flex-grow: 1; overflow-y: auto; padding-right: 10px; }
+.history-item { padding: 10px 5px; border-bottom: 1px solid #eee; cursor: pointer; transition: background-color 0.2s; text-align: right; }
 .history-item:last-child { border-bottom: none; }
 .history-item:hover { background-color: #e0f7fa; }
-
-.history-expression {
-    font-size: 0.9em;
-    color: #666;
-    margin-bottom: 3px;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.history-result {
-    font-size: 1.4em;
-    font-weight: 600;
-    color: var(--text-color);
-    word-wrap: break-word;
-    white-space: normal;
-}
-
+.history-expression { font-size: 0.9em; color: #666; margin-bottom: 3px; word-wrap: break-word; white-space: normal; }
+.history-result { font-size: 1.4em; font-weight: 600; color: var(--text-color); word-wrap: break-word; white-space: normal; }
 .empty-history { color: #999; text-align: center; margin-top: 20px; }
-
-#clearHistoryBtn {
-    background: none;
-    border: none;
-    color: var(--primary-dark);
-    cursor: pointer;
-    padding: 5px;
-    transition: color 0.2s;
-}
-
+#clearHistoryBtn { background: none; border: none; color: var(--primary-dark); cursor: pointer; padding: 5px; transition: color 0.2s; }
 #clearHistoryBtn:hover { color: #e53935; }
-
-.overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); z-index: 999;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
-}
-
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .overlay.active { opacity: 1; pointer-events: auto; }
 
 
-/* --- MEDIA QUERIES UNTUK TAMPILAN STANDAR (4 kolom) --- */
+/* --- KOREKSI RESPONSIVITAS MOBILE (4 KOLOM) --- */
 @media (max-width: 550px) {
     .main-container {
-        max-width: none;
-        min-height: 100vh;
         border-radius: 0;
         box-shadow: none;
+        min-height: 100vh;
+        max-width: none;
     }
     .calculator {
         padding: 15px;
     }
-    .result {
-        font-size: 3em;
-    }
-    .history-panel {
-        width: 85%;
-    }
-
-    /* Mengubah ke tata letak 4 kolom standar dan membiarkan Grid mengalir */
+    
+    /* Atur semua tombol ke 4 kolom standar */
     .buttons {
         grid-template-columns: repeat(4, 1fr); 
         gap: 8px; 
     }
     
-    /* Membuat tombol '=' memanjang 2 baris (tinggi 2x) dan memposisikannya
-       di kolom 4, mencakup dari baris ke-7 sampai ke-8 (agar sejajar dengan 00, 000, 0, .) */
-    .eq {
-        grid-row: span 2;
-        /* Karena kita membuang 00 dan 000 di HTML sebelumnya, 
-           kita akan membiarkan grid flow standar 4x7, dan = akan jatuh di baris terakhir,
-           jadi kita gunakan grid-row: span 2 jika kita mau tinggi 2 baris */
-        /* Namun, untuk flow yang mudah, kita tidak akan span, 
-           biarkan = menjadi tombol tunggal di barisnya */
+    /* Tombol yang memiliki 5 kolom di desktop perlu mengisi 4 kolom di mobile. 
+       Karena tombol-tombol di baris terakhir (0, ., 00, 000, =) menyebabkan masalah,
+       kita akan mengatur ulang tata letak grid dengan properti span untuk baris 0, ., +, = */
+    
+    /* Baris 1-4 (Sci & Control) akan mengalir 4 kolom */
+    /* Kita perlu memastikan tombol di baris bawah mengisi ruang */
+    
+    /* Tombol 000 dan 00 (yang hanya ada 2) harus dihilangkan atau digabungkan agar 4 kolom utuh */
+    
+    /* PENTING: Untuk membuat tombol 0 lebih lebar, kita buat ia span 2 kolom. */
+    .buttons button[data-value="0"] {
+        grid-column: span 2; /* Tombol 0 memanjang dua kolom */
     }
+
+    /* Pindahkan tombol '=' ke baris paling kanan dan memanjang 2 baris
+       (ini membutuhkan penyesuaian di JS/HTML, namun kita fokus CSS) */
+    
+    /* Penyesuaian Tombol 00/000 agar tidak berantakan:
+       Kita buat tombol 0 span 2, lalu . dan = di sebelah kanan */
+       
+    /* Anggap urutan HTML di baris terakhir adalah: 0, ., +, = */
+    /* Jika Anda ingin: 0 (span 2), . (col 3), = (col 4, span 2 row) */
+
+    /* Karena ada 5 tombol di baris 6 (1,2,3,+,=) dan 5 tombol di baris 7 (0,.,00,000,empty),
+       struktur 4 kolom akan membuat:
+       Baris 6: 1, 2, 3, +
+       Baris 7: =, 0, ., 00
+       Baris 8: 000, empty, empty, empty 
+       
+       Maka, kita harus menetapkan posisi spesifik: */
+
+    .buttons button[data-value="0"] {
+        grid-column: 1 / span 2; /* 0 span 2 kolom */
+        order: 99; /* Pastikan di baris paling bawah */
+    }
+
+    .buttons button[data-value="."]{
+        grid-column: 3 / span 1;
+        order: 100;
+    }
+    
+    .buttons button[data-value="+"] {
+        grid-column: 4 / span 1;
+        order: 90;
+    }
+    
+    /* Tombol Equals memanjang ke bawah dan ke kanan */
+    .eq {
+        grid-column: 4 / span 1;
+        grid-row: 6 / span 2; /* Memanjang dari baris 6 hingga baris 7 */
+        order: 101;
+    }
+    
+    /* Sembunyikan tombol 00 dan 000 yang tidak dibutuhkan di tata letak 4 kolom standar */
+    .buttons button[data-value="00"],
+    .buttons button[data-value="000"] {
+        display: none;
+    }
+    
+    /* Sesuaikan posisi baris angka 1,2,3 dan op +
+       Baris 5 (4,5,6,-), Baris 6 (1,2,3) */
+       
+    .buttons button[data-value="1"] { grid-row: 6; grid-column: 1; }
+    .buttons button[data-value="2"] { grid-row: 6; grid-column: 2; }
+    .buttons button[data-value="3"] { grid-row: 6; grid-column: 3; }
+
+    .buttons button[data-value="0"] { grid-row: 7; }
+    .buttons button[data-value="."]{ grid-row: 7; }
+    
+    /* Tombol 'log' harus di baris 1, kolom 1 */
+    .buttons button[data-value="log("] { grid-row: 1; grid-column: 1; }
 }
