@@ -8,9 +8,9 @@
     --operator-color: #ff9800; /* Oranye */
     --scientific-color: #5c6bc0; /* Indigo */
     --history-bg: #f5f7fa;
-    --history-width: 350px; /* Diperbesar sedikit */
+    --history-width: 350px; 
     --calc-max-width: 400px; /* Ukuran kalkulator lebih ringkas */
-    --padding-base: 20px; /* Padding lebih ringkas */
+    --padding-base: 20px; 
 }
 
 body {
@@ -40,13 +40,13 @@ body {
     padding: var(--padding-base);
 }
 
-/* Header (Dibuat lebih sederhana dan ringkas) */
+/* --- Header --- */
 .header {
     display: flex;
-    justify-content: space-between; /* Rata kiri-kanan */
+    justify-content: space-between; 
     align-items: center;
     margin-bottom: 25px;
-    padding: 0 5px; /* Sedikit padding horizontal */
+    padding: 0 5px; 
 }
 
 .burger-menu, .mic-button {
@@ -59,30 +59,26 @@ body {
     transition: color 0.2s;
 }
 
-.burger-menu {
-    font-size: 1.5em; /* Ukuran ikon */
-}
+.burger-menu { font-size: 1.5em; }
 
 .mic-button {
     font-size: 1.2em;
     font-weight: 600;
-    display: flex; /* Untuk menempatkan ikon mic */
+    display: flex; 
     align-items: center;
 }
 
-.mic-button span.material-icons {
-    font-size: 1.6em;
-}
+.mic-button span.material-icons { font-size: 1.6em; }
 
 .title {
     color: var(--primary-color);
-    font-size: 1.8em; /* Ukuran lebih kecil */
+    font-size: 1.8em; 
     font-weight: 800;
     letter-spacing: 2px;
     margin: 0;
 }
 
-/* Tampilan Layar */
+/* --- Tampilan Layar --- */
 .display-container {
     text-align: right;
     margin-bottom: 20px;
@@ -97,7 +93,7 @@ body {
 }
 
 .result {
-    font-size: 3.5em; /* Ukuran sedikit lebih kecil untuk desktop */
+    font-size: 3.5em; 
     font-weight: 300;
     color: var(--text-color);
     overflow-x: auto;
@@ -105,28 +101,23 @@ body {
     line-height: 1.2;
 }
 
-/* Tombol Rekam (Dihapus dari sini karena sudah dipindahkan ke header) */
-.voice-input {
-    display: none; /* Sembunyikan div voice-input yang lama */
-}
-
-/* Tombol Kalkulator */
+/* --- Tombol Kalkulator (Grid) --- */
 .buttons {
     display: grid;
     /* Tampilan Default Desktop: 5 kolom (4 Dasar + 1 Ilmiah) */
     grid-template-columns: repeat(5, 1fr); 
-    gap: 10px; /* Jarak tombol lebih ringkas */
+    gap: 10px; 
 }
 
 .empty-cell {
-    display: none; 
+    display: none; /* Dihapus dari HTML, tapi tetap didefinisikan untuk jaga-jaga */
 }
 
 .btn {
-    padding: 15px 0; /* Padding vertikal lebih kecil */
+    padding: 15px 0; 
     font-size: 1.2em;
     border: none;
-    border-radius: 10px; /* Radius lebih kecil */
+    border-radius: 10px; 
     cursor: pointer;
     transition: background-color 0.2s, box-shadow 0.1s, transform 0.1s;
     font-weight: 500;
@@ -139,19 +130,14 @@ body {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.btn.fn span.material-icons {
-    font-size: 1.2em;
-}
+.btn.fn span.material-icons { font-size: 1.2em; }
 
 /* Gaya Tombol */
-.num {
-    background-color: #f0f0f0;
-    color: var(--text-color);
-}
+.num { background-color: #f0f0f0; color: var(--text-color); }
 
-.op, .eq {
-    background-color: var(--operator-color);
-    color: white; /* Mengubah warna teks operator menjadi putih */
+.op, .eq { 
+    background-color: var(--operator-color); 
+    color: white; 
     font-weight: bold;
 }
 
@@ -172,14 +158,12 @@ body {
 
 /* Tombol Sama Dengan (=) */
 .eq {
-    background-color: var(--primary-color); /* Warna yang menonjol */
-    font-size: 1.6em; /* Ukuran lebih kecil agar proporsional */
+    background-color: var(--primary-color); 
+    font-size: 1.6em; 
 }
 
-
-/* HISTORY PANEL (Gaya standar) */
+/* --- HISTORY PANEL & OVERLAY --- */
 .history-panel {
-    /* ... (Tetap sama seperti kode asli) ... */
     position: fixed; top: 0; right: 0; height: 100%; width: var(--history-width);
     background-color: var(--history-bg); box-shadow: -8px 0 20px rgba(0, 0, 0, 0.3);
     transform: translateX(100%); transition: transform 0.3s ease-in-out;
@@ -188,11 +172,63 @@ body {
 
 .history-panel.open { transform: translateX(0); }
 .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.history-list { flex-grow: 1; overflow-y: auto; }
-.overlay { /* ... (Tetap sama seperti kode asli) ... */ }
+.history-list { 
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 10px; /* Ruang untuk scrollbar */
+}
+
+/* Gaya item riwayat */
+.history-item {
+    padding: 10px 5px;
+    border-bottom: 1px solid #eee; /* Sekat pemisah yang lembut */
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-align: right;
+}
+
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { background-color: #e0f7fa; }
+
+.history-expression {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 3px;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.history-result {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: var(--text-color);
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.empty-history { color: #999; text-align: center; margin-top: 20px; }
+
+#clearHistoryBtn {
+    background: none;
+    border: none;
+    color: var(--primary-dark);
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+#clearHistoryBtn:hover { color: #e53935; }
+
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); z-index: 999;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+
 .overlay.active { opacity: 1; pointer-events: auto; }
 
-/* MEDIA QUERIES UNTUK TAMPILAN STANDAR (4 kolom) pada layar kecil */
+
+/* --- MEDIA QUERIES UNTUK TAMPILAN STANDAR (4 kolom) --- */
 @media (max-width: 550px) {
     .main-container {
         max-width: none;
@@ -210,78 +246,20 @@ body {
         width: 85%;
     }
 
-    /* Mengubah ke tata letak 4 kolom standar */
+    /* Mengubah ke tata letak 4 kolom standar dan membiarkan Grid mengalir */
     .buttons {
         grid-template-columns: repeat(4, 1fr); 
-        gap: 8px; /* Jarak lebih kecil di mobile */
+        gap: 8px; 
     }
     
-    /* Tombol ilmiah dan fungsi yang sebelumnya di kolom ke-5, sekarang mengalir ke baris atas. */
-    /* Cukup dengan menghapus properti grid-column/grid-row yang mengganggu dan membiarkan grid mengalir. */
-    /* Pastikan urutan HTML-nya sudah benar (Sci functions di atas) */
-}
-/* --- Tambahan/Modifikasi untuk HISTORY PANEL --- */
-
-/* Memastikan riwayat menggunakan flexbox untuk tata letak yang bersih */
-.history-list {
-    flex-grow: 1;
-    overflow-y: auto;
-    /* Tambahkan scrollbar yang lebih rapi jika memungkinkan */
-    padding-right: 10px; /* Ruang untuk scrollbar */
-}
-
-/* Gaya untuk setiap item riwayat */
-.history-item {
-    padding: 10px 5px;
-    border-bottom: 1px solid #eee; /* Sekat pemisah yang lembut */
-    cursor: pointer;
-    transition: background-color 0.2s;
-    text-align: right;
-}
-
-.history-item:last-child {
-    border-bottom: none; /* Hilangkan sekat pada item terakhir */
-}
-
-.history-item:hover {
-    background-color: #e0f7fa; /* Warna hover yang sama dengan fungsi */
-}
-
-/* Gaya untuk ekspresi perhitungan (baris atas) */
-.history-expression {
-    font-size: 0.9em;
-    color: #666;
-    margin-bottom: 3px;
-    word-wrap: break-word; /* Memecah baris jika terlalu panjang */
-    white-space: normal;
-}
-
-/* Gaya untuk hasil perhitungan (baris bawah) */
-.history-result {
-    font-size: 1.4em;
-    font-weight: 600;
-    color: var(--text-color);
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-/* Gaya untuk teks "Belum ada perhitungan" */
-.empty-history {
-    color: #999;
-    text-align: center;
-    margin-top: 20px;
-}
-
-/* Perbaikan tombol hapus riwayat */
-#clearHistoryBtn {
-    background: none;
-    border: none;
-    color: var(--primary-dark);
-    cursor: pointer;
-    padding: 5px;
-    transition: color 0.2s;
-}
-
-#clearHistoryBtn:hover {
-    color: #e53935; /* Warna merah saat di-hover */
+    /* Membuat tombol '=' memanjang 2 baris (tinggi 2x) dan memposisikannya
+       di kolom 4, mencakup dari baris ke-7 sampai ke-8 (agar sejajar dengan 00, 000, 0, .) */
+    .eq {
+        grid-row: span 2;
+        /* Karena kita membuang 00 dan 000 di HTML sebelumnya, 
+           kita akan membiarkan grid flow standar 4x7, dan = akan jatuh di baris terakhir,
+           jadi kita gunakan grid-row: span 2 jika kita mau tinggi 2 baris */
+        /* Namun, untuk flow yang mudah, kita tidak akan span, 
+           biarkan = menjadi tombol tunggal di barisnya */
+    }
 }
