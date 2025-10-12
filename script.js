@@ -62,9 +62,7 @@ function cleanExpression(expression) {
         .replace(/÷/g, '/')
         .replace(/×/g, '*')
         .replace(/MOD/g, '%')
-        .replace(/\^/g, '**');
-
-    cleaned = cleaned
+        .replace(/\^/g, '**')
         .replace(/sin\(/g, 'Math.sin(')
         .replace(/cos\(/g, 'Math.cos(')
         .replace(/tan\(/g, 'Math.tan(')
@@ -100,7 +98,6 @@ function previewCalculation() {
 
     try {
         const expression = cleanExpression(expressionToCalculate);
-        
         let calculatedResult = (new Function('return ' + expression))();
         
         if (!isFinite(calculatedResult)) {
@@ -125,7 +122,6 @@ function calculate() {
 
     try {
         const expression = cleanExpression(expressionToCalculate);
-        
         let calculatedResult = (new Function('return ' + expression))();
         
         if (!isFinite(calculatedResult)) {
@@ -142,27 +138,19 @@ function calculate() {
             let finalExpression = expressionToCalculate;
 
             if (expressionToCalculate.includes('/') && targetValue !== null && inputNumber !== null) {
-                
                 let actualResult = X * inputNumber;
                 Y = targetValue - actualResult;
                 
                 finalExpression = `${inputNumber} × ${X} ${Y >= 0 ? '+' : '-'} ${Math.abs(Y)}`;
                 formattedResult = `${X}`; 
 
-                combinationDetails = {
-                    X: X,
-                    Y: Y,
-                    finalExpression: finalExpression,
-                    target: targetValue,
-                    operation: Y >= 0 ? '+' : '-'
-                };
+                combinationDetails = { X: X, Y: Y, finalExpression: finalExpression, target: targetValue, operation: Y >= 0 ? '+' : '-' };
             }
             
             if (combinationDetails === null) {
                  X = Math.round(calculatedResult);
                  formattedResult = String(X);
             }
-            
             addToHistory(expressionToCalculate, formattedResult, combinationDetails, calculatedResult);
 
         } else {
@@ -198,12 +186,7 @@ function calculate() {
 
 function addToHistory(expression, result, combination = null, originalResult = null) {
     if (expression !== 'Error' && expression !== '0') {
-        historyRecords.push({
-            expression: expression,
-            result: result,
-            combination: combination,
-            originalResult: originalResult || result
-        });
+        historyRecords.push({ expression: expression, result: result, combination: combination, originalResult: originalResult || result });
         saveHistory(); 
         renderHistory();
     }
@@ -224,59 +207,49 @@ function handleButton(value) {
         return;
 
     } else if (value === 'backspace') {
-        if (currentExpression === 'Error') {
-             currentExpression = '0';
-        } else if (lastResult !== null) {
-            currentExpression = '0';
-            lastResult = null;
-        } else {
+        if (currentExpression === 'Error') { currentExpression = '0'; } 
+        else if (lastResult !== null) { currentExpression = '0'; lastResult = null; } 
+        else {
             currentExpression = currentExpression.slice(0, -1);
-            if (currentExpression.length === 0) {
-                 currentExpression = '0';
-            }
+            if (currentExpression.length === 0) { currentExpression = '0'; }
         }
-        
         currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
-        
         updateDisplay();
         previewCalculation();
         return;
 
     } else if (value === 'fact') {
-          if (/[0-9)]/.test(currentExpression.slice(-1))) {
-              currentExpression += '!';
-          }
+          if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '!'; }
     
+    } else if (value === '^2') { // <--- PENANGANAN BARU UNTUK X²
+          if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
+          else if (currentExpression === 'Error' || currentExpression === '0') { currentExpression = '0^2'; }
+          else { currentExpression += '0^2'; }
+          
     } else {
         const isOperator = /[+\-×÷ MOD()^]/.test(value) || value.includes('(');
         
         if (lastResult !== null && lastResult !== undefined) {
-              if (isOperator) {
-                  currentExpression = String(lastResult) + value;
-              } else {
-                  currentExpression = value;
-              }
+              if (isOperator) { currentExpression = String(lastResult) + value; } 
+              else { currentExpression = value; }
               lastResult = null;
               historyCurrentEl.textContent = '';
         
         } else {
-              if (currentExpression === '0' && value !== '.') {
-                  currentExpression = value;
-              } else {
-                  currentExpression += value;
-              }
+              if (currentExpression === '0' && value !== '.') { currentExpression = value; } 
+              else { currentExpression += value; }
         }
     }
     
     currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
-
     updateDisplay();
     previewCalculation(); 
 }
 
 // =================================================================
-// LOGIKA INPUT SUARA (Tidak Berubah)
+// LOGIKA RIWAYAT, MENU, DAN SUARA (Tidak Berubah)
 // =================================================================
+// ... (Kode Input Suara, Toggle History, Render History sama seperti sebelumnya) ...
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 if (SpeechRecognition) {
@@ -327,67 +300,36 @@ function processVoiceCommand(command) {
     }
 }
 
-// =================================================================
-// LOGIKA RIWAYAT & MENU
-// =================================================================
-
 function toggleHistoryPanel(isOpen) {
-    if (isOpen) {
-        historyPanel.classList.add('open');
-        overlay.classList.add('active');
-    } else {
-        historyPanel.classList.remove('open');
-        overlay.classList.remove('active');
-    }
+    if (isOpen) { historyPanel.classList.add('open'); overlay.classList.add('active'); } 
+    else { historyPanel.classList.remove('open'); overlay.classList.remove('active'); }
 }
-
 burgerMenuBtn.addEventListener('click', () => {
     const isCurrentlyOpen = historyPanel.classList.contains('open');
     toggleHistoryPanel(!isCurrentlyOpen);
 });
-
-overlay.addEventListener('click', () => {
-    toggleHistoryPanel(false);
-});
+overlay.addEventListener('click', () => { toggleHistoryPanel(false); });
 
 function renderHistory() {
     historyListEl.innerHTML = '';
-    
-    if (historyRecords.length === 0) {
-        historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>';
-        return;
-    }
-
+    if (historyRecords.length === 0) { historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>'; return; }
     historyRecords.slice().reverse().forEach((record) => {
         const item = document.createElement('div');
         item.classList.add('history-item');
-        
         let expressionText = record.expression;
         let resultText = record.result;
-
         if (record.combination) {
               expressionText = record.combination.finalExpression;
               resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'selisih' : 'kurang'} ${Math.abs(record.combination.Y)})`;
         }
-        
-        item.innerHTML = `
-            <div class="history-expression">${expressionText} =</div>
-            <div class="history-result">${resultText}</div>
-        `;
-
+        item.innerHTML = `<div class="history-expression">${expressionText} =</div><div class="history-result">${resultText}</div>`;
         item.addEventListener('click', () => {
-            if (record.combination) {
-                currentExpression = String(record.combination.X);
-                historyCurrentEl.textContent = `Jawaban: ${expressionText} = ${record.combination.target}`;
-            } else {
-                currentExpression = String(record.result);
-                historyCurrentEl.textContent = record.expression + ' =';
-            }
+            if (record.combination) { currentExpression = String(record.combination.X); historyCurrentEl.textContent = `Jawaban: ${expressionText} = ${record.combination.target}`; } 
+            else { currentExpression = String(record.result); historyCurrentEl.textContent = record.expression + ' ='; }
             lastResult = parseFloat(record.originalResult);
             updateDisplay();
             toggleHistoryPanel(false);
         });
-
         historyListEl.appendChild(item);
     });
 }
