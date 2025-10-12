@@ -9,7 +9,7 @@
     --scientific-color: #5c6bc0; /* Indigo */
     --history-bg: #f5f7fa;
     --history-width: 350px; 
-    --calc-max-width: 400px; /* Ukuran kalkulator lebih ringkas */
+    --calc-max-width: 400px;
     --padding-base: 20px; 
 }
 
@@ -42,54 +42,12 @@ body {
     padding: var(--padding-base);
 }
 
-/* --- Header --- */
-.header {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-    margin-bottom: 25px;
-    padding: 0 5px; 
-}
-
-.burger-menu, .mic-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--primary-dark);
-    padding: 5px;
-    z-index: 1001;
-    transition: color 0.2s;
-}
-
-.burger-menu { font-size: 1.5em; }
-.mic-button { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; }
-.mic-button span.material-icons { font-size: 1.6em; }
-.title {
-    color: var(--primary-color);
-    font-size: 1.8em; 
-    font-weight: 800;
-    letter-spacing: 2px;
-    margin: 0;
-}
-
-/* --- Tampilan Layar --- */
-.display-container { text-align: right; margin-bottom: 20px; padding: 10px 5px; }
-.history-current { font-size: 1em; color: #888; min-height: 1.1em; line-height: 1.1em; }
-.result { font-size: 3.5em; font-weight: 300; color: var(--text-color); overflow-x: auto; white-space: nowrap; line-height: 1.2; }
-
 /* --- Tombol Kalkulator (Grid) --- */
 .buttons {
     display: grid;
-    /* Tampilan Default Desktop: 5 kolom */
-    grid-template-columns: repeat(5, 1fr); 
+    /* SEMUA TAMPILAN: 4 kolom */
+    grid-template-columns: repeat(4, 1fr); 
     gap: 10px; 
-}
-
-.empty-cell {
-    /* Pastikan kolom yang kosong tidak terlihat di desktop 5 kolom */
-    display: block; 
-    background: none; 
-    box-shadow: none;
 }
 
 .btn {
@@ -112,6 +70,15 @@ body {
     filter: brightness(0.95); 
 }
 
+/* Penyesuaian Grid untuk 0 dan = */
+.buttons button[data-value="0"] {
+    grid-column: span 3; /* Tombol 0 memanjang 3 kolom */
+}
+
+.buttons button[data-value="="] {
+    grid-column: span 1; /* Tombol = hanya 1 kolom, di samping 0 */
+}
+
 /* Gaya Tombol */
 .num { background-color: #f0f0f0; color: var(--text-color); }
 .op, .eq { background-color: var(--operator-color); color: white; font-weight: bold; }
@@ -119,7 +86,17 @@ body {
 .sci { background-color: var(--scientific-color); color: white; font-size: 1em; font-weight: 500; box-shadow: 0 2px 4px rgba(92, 107, 192, 0.4); }
 .eq { background-color: var(--primary-color); font-size: 1.6em; }
 
-/* --- HISTORY PANEL (Dipertahankan) --- */
+/* --- Bagian Lain (Header, Display, History) dipertahankan --- */
+
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; }
+.burger-menu, .mic-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
+.burger-menu { font-size: 1.5em; }
+.mic-button { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; }
+.mic-button span.material-icons { font-size: 1.6em; }
+.title { color: var(--primary-color); font-size: 1.8em; font-weight: 800; letter-spacing: 2px; margin: 0; }
+.display-container { text-align: right; margin-bottom: 20px; padding: 10px 5px; }
+.history-current { font-size: 1em; color: #888; min-height: 1.1em; line-height: 1.1em; }
+.result { font-size: 3.5em; font-weight: 300; color: var(--text-color); overflow-x: auto; white-space: nowrap; line-height: 1.2; }
 .history-panel { position: fixed; top: 0; right: 0; height: 100%; width: var(--history-width); background-color: var(--history-bg); box-shadow: -8px 0 20px rgba(0, 0, 0, 0.3); transform: translateX(100%); transition: transform 0.3s ease-in-out; padding: var(--padding-base); z-index: 1000; display: flex; flex-direction: column; }
 .history-panel.open { transform: translateX(0); }
 .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -135,8 +112,7 @@ body {
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .overlay.active { opacity: 1; pointer-events: auto; }
 
-
-/* --- KOREKSI RESPONSIVITAS MOBILE (4 KOLOM STANDAR) --- */
+/* --- RESPONSIVITAS MOBILE: Memaksimalkan ukuran di layar kecil --- */
 @media (max-width: 550px) {
     .main-container {
         border-radius: 0;
@@ -148,50 +124,7 @@ body {
         padding: 15px;
     }
     
-    /* Mengubah ke tata letak 4 kolom standar */
     .buttons {
-        grid-template-columns: repeat(4, 1fr); 
-        gap: 8px; 
+        gap: 8px; /* Sedikit lebih kecil di mobile */
     }
-
-    /* Pastikan empty cell disembunyikan di mobile agar tata letak 4 kolom tidak terganggu */
-    .empty-cell {
-        display: none;
-    }
-    
-    /* Posisikan tombol 0 untuk memanjang 2 kolom */
-    .buttons button[data-value="0"] {
-        grid-column: span 2; 
-    }
-    
-    /* Posisikan tombol = untuk memanjang 2 baris
-       (Dimulai dari baris ke-6 (angka 1,2,3), menutupi baris ke-7 (0,.) */
-    .eq {
-        grid-row: 6 / span 2; 
-        grid-column: 4 / span 1; /* Di kolom paling kanan */
-        /* Urutan baris:
-           1. log, pi, e, x^y
-           2. sqrt, sin, cos, tan
-           3. AC, MOD, n!, backspace
-           4. 7, 8, 9, *
-           5. 4, 5, 6, -
-           6. 1, 2, 3, + (dan =)
-           7. 0, ., (dan =) */
-    }
-    
-    /* Penyesuaian Tombol + agar berada di baris 6, kolom 3 */
-    .buttons button[data-value="+"] {
-        /* Pindahkan + dari kolom 4 ke kolom 3 di baris 6 */
-        grid-column: 3 / span 1; 
-        grid-row: 6; 
-    }
-    
-    /* Penyesuaian Tombol . agar berada di baris 7, kolom 3 */
-    .buttons button[data-value="."]{
-        grid-column: 3 / span 1;
-        grid-row: 7;
-    }
-
-    /* Angka 1, 2, 3 mengalir secara default ke kolom 1, 2, 3 di baris 6 (karena + pindah) */
-    /* Tombol 0 mengalir ke kolom 1 dan 2 di baris 7 (karena span 2) */
 }
