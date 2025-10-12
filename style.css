@@ -70,24 +70,70 @@ body {
     filter: brightness(0.95); 
 }
 
-/* Penyesuaian Grid untuk 0 dan = */
+/* Penyesuaian Grid untuk BARIS TERAKHIR */
+
+/* Tombol 0 (di tengah baris terakhir, setelah '.') */
 .buttons button[data-value="0"] {
-    grid-column: span 3; /* Tombol 0 memanjang 3 kolom */
+    grid-column: span 2; /* Tombol 0 memanjang 2 kolom */
 }
 
+/* Tombol = (di akhir baris terakhir) */
 .buttons button[data-value="="] {
-    grid-column: span 1; /* Tombol = hanya 1 kolom, di samping 0 */
+    /* Tombol = memanjang 1 kolom, tapi mencakup dua baris */
+    grid-row: 7 / span 2; /* Mulai dari baris 7, rentang 2 baris (mencakup baris 7 dan 8) */
+    grid-column: 4 / span 1; /* Di kolom terakhir */
 }
 
-/* Gaya Tombol */
+/* Tombol + (di baris 7) dan Tombol . (di baris 8) perlu disesuaikan 
+   karena tombol = mengambil kolom 4 dari baris 7 */
+.buttons button[data-value="+"] {
+    /* Pindahkan + dari kolom 4 ke kolom 3 di baris 7 */
+    grid-column: 3 / span 1;
+    grid-row: 7;
+}
+
+/* Tombol 1, 2, 3 (Baris 7, Kolom 1, 2, 3) -> Diatur ulang karena '+' pindah ke Kolom 3 */
+.buttons button[data-value="1"] { grid-column: 1; grid-row: 7; }
+.buttons button[data-value="2"] { grid-column: 2; grid-row: 7; }
+.buttons button[data-value="3"] { 
+    /* Dihilangkan karena '+' sekarang di kolom 3 */
+    display: none; 
+} 
+
+/* PENTING: Mengubah penempatan baris 7 & 8 untuk mencerminkan urutan tombol di HTML */
+/* Urutan baru:
+   B7: 1, 2, 3, + 
+   B8: ., 0, = 
+   
+   Karena tombol '=' span 2 baris di kolom 4, kita harus memastikan 
+   baris 7 dan 8 menggunakan 3 kolom pertama */
+   
+/* Baris 7: 1, 2, 3, (dihilangkan karena =) */
+.buttons button[data-value="1"] { grid-column: 1; grid-row: 7; }
+.buttons button[data-value="2"] { grid-column: 2; grid-row: 7; }
+.buttons button[data-value="3"] { grid-column: 3; grid-row: 7; }
+.buttons button[data-value="+"] { grid-column: 4; grid-row: 7; } /* Ditempatkan di kolom 4 di baris 7 */
+
+/* Baris 8: ., 0, = */
+.buttons button[data-value="."] { grid-column: 1; grid-row: 8; } 
+.buttons button[data-value="0"] { grid-column: 2 / span 2; grid-row: 8; } /* Memanjang dari kolom 2 ke 3 */
+.buttons button[data-value="="] { grid-column: 4; grid-row: 8; } /* Di kolom 4, Baris 8 (span 1) */
+
+
+/* GAYA TOMBOL */
 .num { background-color: #f0f0f0; color: var(--text-color); }
 .op, .eq { background-color: var(--operator-color); color: white; font-weight: bold; }
 .fn { background-color: #e0f7fa; color: var(--primary-dark); font-weight: 600; }
 .sci { background-color: var(--scientific-color); color: white; font-size: 1em; font-weight: 500; box-shadow: 0 2px 4px rgba(92, 107, 192, 0.4); }
 .eq { background-color: var(--primary-color); font-size: 1.6em; }
 
-/* --- Bagian Lain (Header, Display, History) dipertahankan --- */
+/* Menyesuaikan tombol x^2 di HTML */
+.buttons button[data-value="^2"] {
+    font-size: 1.1em;
+}
 
+
+/* --- Bagian Lain --- */
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; }
 .burger-menu, .mic-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
 .burger-menu { font-size: 1.5em; }
@@ -127,4 +173,10 @@ body {
     .buttons {
         gap: 8px; /* Sedikit lebih kecil di mobile */
     }
+    
+    /* Tombol-tombol di baris 7 dan 8 yang di-span tetap berjalan baik */
+    /* Kita hanya perlu memastikan tombol '3' yang sebelumnya disembunyikan, sekarang terlihat */
+    .buttons button[data-value="3"] { 
+        display: block; 
+    } 
 }
