@@ -50,6 +50,8 @@
         .key-group { cursor: default; } 
         .key-group h3 { margin-top: 0; margin-bottom: 5px; color: var(--primary-dark); font-size: 1.1em; }
         .key-group p { margin: 0; font-size: 0.9em; color: #555; line-height: 1.4; }
+        /* Style untuk pesan riwayat kosong */
+        .empty-history { color: #999; text-align: center; margin-top: 20px; } 
         @media (max-width: 550px) {
             body { align-items: flex-start; }
             .main-container { border-radius: 0; box-shadow: none; min-height: 100vh; max-width: none; }
@@ -234,7 +236,6 @@
             resultEl.scrollLeft = 0; 
         }
         
-        // FUNGSI INTI PERHITUNGAN (TIDAK DIBULATKAN - MENGHASILKAN DESIMAL)
         function calculate() {
             let expressionToCalculate = currentExpression;
             if (expressionToCalculate === '0' || expressionToCalculate === 'Error') return;
@@ -245,11 +246,10 @@
                 
                 if (!isFinite(calculatedResult)) throw new Error("Invalid Calculation");
 
-                // Mempertahankan desimal
                 calculatedResult = parseFloat(calculatedResult.toFixed(10)); 
 
                 let formattedResult = String(calculatedResult);
-                addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
+                addToHistory(expressionToCalculate, formattedResult, null, calculatedResult); // Menambahkan ke history
 
                 historyCurrentEl.textContent = expressionToCalculate + ' =';
                 lastResult = calculatedResult;
@@ -265,7 +265,7 @@
                 console.error("Calculation Error:", error);
             }
         }
-        // ... (Fungsi Utility lainnya tetap)
+        
         function loadHistory() {
             const storedHistory = localStorage.getItem('calculatorHistory');
             if (storedHistory) { try { historyRecords = JSON.parse(storedHistory); } catch (e) { historyRecords = []; } }
@@ -277,7 +277,8 @@
                 const lastRecord = historyRecords[historyRecords.length - 1];
                 if (lastRecord && lastRecord.expression === expression && lastRecord.result === result) return;
                 historyRecords.push({ expression: expression, result: result, combination: combination, originalResult: originalResult || result });
-                saveHistory(); renderHistory();
+                saveHistory(); 
+                renderHistory(); // Pastikan render dipanggil setelah menambahkan data
             }
         }
         function previewCalculation() {
@@ -339,7 +340,7 @@
         }
 
         // =================================================================
-        // LOGIKA SUARA (Pencarian Variabel Implisit Ditingkatkan) 🛠️
+        // LOGIKA SUARA
         // =================================================================
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -434,38 +435,35 @@
                     
                     // b. Terapkan Logika Format Khusus (Pembagian dan Sisa)
                     
-                    // X (faktor bulat)
                     const factorX = Math.floor(targetValue / valA); 
-                    
-                    // Sisa (target - (faktor * awal))
-                    const remainder = targetValue - (valA * factorX); 
+                    const remainder = parseFloat((targetValue - (valA * factorX)).toFixed(10)); // Jaga presisi sisa
                     
                     let resultDisplay;
                     let finalCalculation;
                     
                     if (remainder === 0) {
-                        // Kasus 1: Habis dibagi (contoh 15 ke 480 -> 15 * 32)
                         resultDisplay = `${valA} × ${factorX}`;
                         finalCalculation = `${valA * factorX}`;
                     } else if (remainder > 0) {
-                        // Kasus 2: Sisa positif (contoh 15 ke 500 -> 15 * 33 + 5)
                         resultDisplay = `${valA} × ${factorX} + ${remainder}`;
-                        finalCalculation = `${(valA * factorX) + remainder}`;
+                        finalCalculation = `${valA * factorX + remainder}`;
                     } else { 
-                        // Kasus 3: Sisa negatif (tidak mungkin jika pakai Math.floor, tapi untuk jaga-jaga)
+                        // Jika remainder negatif (walaupun jarang terjadi dengan Math.floor)
                         resultDisplay = `${valA} × ${factorX} - ${Math.abs(remainder)}`;
-                        finalCalculation = `${(valA * factorX) + remainder}`;
+                        finalCalculation = `${valA * factorX + remainder}`;
                     }
 
-                    // Set tampilan dan sejarah
-                    currentExpression = finalCalculation; // Ekspresi yang dieksekusi adalah hasil akhirnya
+                    currentExpression = finalCalculation; 
                     
                     // Catatan Sejarah: Menampilkan format yang diminta
-                    historyCurrentEl.textContent = `${valA} ke ${targetExpression}. Dihitung sebagai: ${resultDisplay} =`;
+                    const historyExpression = `${valA} ke ${targetExpression}`; 
                     
-                    lastResult = parseFloat(finalCalculation); // Simpan hasil akhir
+                    historyCurrentEl.textContent = `${historyExpression}. Dihitung sebagai: ${resultDisplay} =`;
+                    
+                    lastResult = parseFloat(finalCalculation); 
                     updateDisplay(); 
-                    addToHistory(`${valA} ke ${targetExpression}`, finalCalculation, null, finalCalculation); // Tambahkan ke sejarah
+                    // Simpan di history: Ekspresi (format khusus), Hasil (nilai numerik), Nilai asli (nilai numerik)
+                    addToHistory(resultDisplay, finalCalculation, null, finalCalculation); 
                     return; // EXIT
                 }
             }
@@ -477,7 +475,6 @@
                 .replace(/perm\s+(\d+)\s+(\d+)/g, 'perm($1,$2)')
                 .replace(/comb\s+(\d+)\s+(\d+)/g, 'comb($1,$2)');
 
-            // Hanya hapus spasi di sekitar operator, dan hapus operator di akhir
             finalExpression = finalExpression
                 .replace(/\s*([\+\-\*\/%MOD\^])\s*/g, '$1') 
                 .replace(/[\+\-\*\/%MOD\^]$/, '') 
@@ -490,7 +487,8 @@
             }
         }
 
-        // --- PANEL LOGIC (Tidak Berubah) ---
+        // --- PANEL LOGIC PERBAIKAN ---
+
         function togglePanel(panelEl, isOpen) {
             if (isOpen) { 
                 panelEl.classList.add('open'); 
@@ -506,21 +504,30 @@
                 }
             }
         }
+        
         burgerMenuBtn.addEventListener('click', () => { togglePanel(historyPanel, true); });
         closeHistoryPanelBtn.addEventListener('click', () => { togglePanel(historyPanel, false); });
         keyBtn.addEventListener('click', () => { togglePanel(keyPanel, true); });
         closeKeyPanelBtn.addEventListener('click', () => { togglePanel(keyPanel, false); });
         overlay.addEventListener('click', () => { togglePanel(historyPanel, false); togglePanel(keyPanel, false); });
+
+        // Fungsi renderHistory yang telah diperbaiki
         function renderHistory() {
-            historyListEl.innerHTML = '';
-            if (historyRecords.length === 0) { historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>'; return; }
+            historyListEl.innerHTML = ''; // Kosongkan dulu
+            if (historyRecords.length === 0) { 
+                historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>'; 
+                return; 
+            }
+            
+            // Tampilkan yang terbaru di atas
             historyRecords.slice().reverse().forEach((record) => {
                 const item = document.createElement('div');
                 item.classList.add('history-item');
-                // Menampilkan ekspresi asli (jika ada format khusus, itu yang disimpannya)
+                // Tampilkan ekspresi yang tersimpan (bisa berupa format khusus atau ekspresi normal)
                 item.innerHTML = `<div class="history-expression">${record.expression} =</div><div class="history-result">${record.result}</div>`;
+                
                 item.addEventListener('click', () => {
-                    // Saat dipanggil dari history, kembalikan ke nilai numerik murni
+                    // Ketika diklik, tampilkan nilai numerik murni di display
                     currentExpression = String(record.originalResult); 
                     historyCurrentEl.textContent = record.expression + ' =';
                     lastResult = parseFloat(record.originalResult);
@@ -530,11 +537,13 @@
                 historyListEl.appendChild(item);
             });
         }
+        
         clearHistoryBtn.addEventListener('click', () => {
             historyRecords = [];
             localStorage.removeItem('calculatorHistory'); 
-            renderHistory();
+            renderHistory(); // Pastikan dipanggil setelah pembersihan
         });
+
         function renderKeyList() {
             const keys = [
                 { title: 'Pencarian Variabel Implisit 💡 (Format Khusus)', content: 'Gunakan **[Angka A] jadi/ke/buat [Angka B] [Operator C]**. Contoh: "**15 buat 500 kurang 20**". (Menghitung $15 \\times X + Sisa = 480$, format output: **$15 \\times 32$**).' },
