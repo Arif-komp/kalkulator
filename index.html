@@ -6,7 +6,7 @@
     
     <title>Kalkulator Ilmiah AYIIPP - 4 Kolom Modern dan Responsif</title>
     
-    <meta name="description" content="Kalkulator ilmiah modern 4 kolom yang rapi dengan fungsi trigonometri, logaritma, dan fitur voice input. Responsif dan cepat.">
+    <meta name="description" content="Kalkulator ilmiah modern 4 kolom yang rapi dengan fungsi trigonometri, logaritma, dan fitur voice input yang fleksibel.">
     
     <meta name="keywords" content="kalkulator, scientific calculator, kalkulator 4 kolom, kalkulator modern, kalkulator responsif, kalkulator web, kalkulator persen">
     
@@ -27,6 +27,7 @@
             --history-bg: #f5f7fa;
             --calc-max-width: 400px;
             --padding-base: 20px; 
+            --history-width: 300px;
         }
 
         /* Baris 27: Reset Box Model */
@@ -167,8 +168,6 @@
         /* Baris 160: Judul Aplikasi */
         .title { color: var(--primary-color); font-size: 1.8em; font-weight: 800; letter-spacing: 2px; margin: 0; }
         
-        /* ... (CSS untuk Riwayat Panel dan Responsif dihilangkan untuk fokus pada inti, tapi akan dimasukkan di kode akhir) ... */
-
         /* Baris 166: Riwayat Panel */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         .overlay.active { opacity: 1; visibility: visible; }
@@ -296,9 +295,9 @@
         let currentExpression = '0';
         let lastResult = null;
         let historyRecords = []; 
-        let isSolvingEquation = false;
-        let targetValue = null;
-        let inputNumber = null;
+        let isSolvingEquation = false; // Dibiarkan sebagai warisan, tapi tidak digunakan
+        let targetValue = null; // Dibiarkan sebagai warisan, tapi tidak digunakan
+        let inputNumber = null; // Dibiarkan sebagai warisan, tapi tidak digunakan
 
         // =================================================================
         // Baris 339: FUNGSI PERSISTENSI RIWAYAT (LocalStorage)
@@ -341,7 +340,8 @@
                 .replace(/log\(/g, 'Math.log10(') // Logaritma Basis 10
                 .replace(/sqrt\(/g, 'Math.sqrt(')
                 .replace(/pi/g, 'Math.PI')
-                .replace(/e/g, 'Math.E');
+                .replace(/e/g, 'Math.E')
+                .replace(/\*\*2/g, '**2'); // Pastikan x² diubah menjadi **2
 
             return cleaned;
         }
@@ -365,13 +365,11 @@
                 return;
             }
             
-            // Baris 408: Jangan preview jika karakter terakhir adalah operator
+            // Baris 408: Jangan preview jika karakter terakhir adalah operator atau kurung buka
             if (/[+\-×÷ MOD\^()]$/.test(expressionToCalculate.slice(-1))) {
                 historyCurrentEl.textContent = expressionToCalculate + '...';
                 return;
             }
-
-            if (isSolvingEquation) return; 
 
             try {
                 // Baris 419: Hitung preview
@@ -408,50 +406,15 @@
                     throw new Error("Invalid Calculation");
                 }
 
-                let formattedResult;
-                let combinationDetails = null;
-
-                // Baris 461: Logika untuk kasus khusus (Solver)
-                if (isSolvingEquation && calculatedResult % 1 !== 0) {
-                    
-                    let X = Math.round(calculatedResult);
-                    let Y = 0;
-                    let finalExpression = expressionToCalculate;
-
-                    if (expressionToCalculate.includes('/') && targetValue !== null && inputNumber !== null) {
-                        let actualResult = X * inputNumber;
-                        Y = targetValue - actualResult;
-                        
-                        finalExpression = `${inputNumber} × ${X} ${Y >= 0 ? '+' : '-'} ${Math.abs(Y)}`;
-                        formattedResult = `${X}`; 
-
-                        combinationDetails = { X: X, Y: Y, finalExpression: finalExpression, target: targetValue, operation: Y >= 0 ? '+' : '-' };
-                    }
-                    
-                    if (combinationDetails === null) {
-                        // Jika bukan solver, bulatkan saja
-                        X = Math.round(calculatedResult);
-                        formattedResult = String(X);
-                    }
-                    addToHistory(expressionToCalculate, formattedResult, combinationDetails, calculatedResult);
-
-                } else {
-                    // Baris 492: Kasus perhitungan normal
-                    calculatedResult = parseFloat(calculatedResult.toFixed(10));
-                    formattedResult = String(calculatedResult);
-                    addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
-                }
+                // Baris 461: Kasus perhitungan normal
+                calculatedResult = parseFloat(calculatedResult.toFixed(10));
+                let formattedResult = String(calculatedResult);
+                addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
 
                 historyCurrentEl.textContent = expressionToCalculate + ' =';
                 lastResult = calculatedResult;
+                currentExpression = formattedResult;
                 
-                if (combinationDetails) {
-                    resultEl.textContent = combinationDetails.X;
-                    historyCurrentEl.textContent = `Pilihan Bulat: ${combinationDetails.finalExpression} ≈ ${combinationDetails.target}`;
-                } else {
-                    currentExpression = formattedResult;
-                }
-
                 updateDisplay();
 
             } catch (error) {
@@ -462,6 +425,7 @@
                 updateDisplay();
                 console.error("Calculation Error:", error);
             } finally {
+                // Reset flag yang tidak terpakai
                 isSolvingEquation = false; 
                 targetValue = null;
                 inputNumber = null;
@@ -471,6 +435,11 @@
         function addToHistory(expression, result, combination = null, originalResult = null) {
             // Baris 531: Menyimpan ke array riwayat
             if (expression !== 'Error' && expression !== '0') {
+                // Hapus duplikat dari riwayat jika hasil dan ekspresi sama
+                const lastRecord = historyRecords[historyRecords.length - 1];
+                if (lastRecord && lastRecord.expression === expression && lastRecord.result === result) {
+                    return;
+                }
                 historyRecords.push({ expression: expression, result: result, combination: combination, originalResult: originalResult || result });
                 saveHistory(); 
                 renderHistory();
@@ -518,8 +487,11 @@
 
             } else if (value === '^2') { // Tombol Kuadrat
                   if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
-                  else if (currentExpression === 'Error' || currentExpression === '0') { currentExpression = '0^2'; }
-                  else { currentExpression += '0^2'; }
+                  else if (currentExpression === 'Error') { currentExpression = '0^2'; }
+                  // Jika ekspresi adalah '0', ganti menjadi ^2 jika sebelumnya ada angka atau kurung
+                  else if (currentExpression === '0' && /[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
+                  else if (currentExpression === '0') { return; }
+                  else { currentExpression += '^2'; } // Tambahkan operator
                 
             } else {
                 // Baris 598: Penanganan Angka dan Operator lainnya
@@ -569,35 +541,84 @@
             historyCurrentEl.textContent = 'Perintah Suara: ' + command;
             let expression = command;
             
-            // Baris 654: Penggantian kata kunci ke simbol matematika/fungsi
-            expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(').replace(/pangkat/g, '^').replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(').replace(/logaritma/g, 'log(').replace(/persen/g, '%').replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-').replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/').replace(/modulus|modulo|sisa bagi/g, ' MOD ');
-            expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3').replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6').replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9').replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
+            // ---------------------------------------------------------------------
+            // FASE 1: Penggantian Kata Kunci ke Simbol
+            // ---------------------------------------------------------------------
+            
+            // Penggantian kata kunci fungsi matematika
+            expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(')
+                .replace(/pangkat/g, '^')
+                .replace(/sinus/g, 'sin(')
+                .replace(/kosinus/g, 'cos(')
+                .replace(/tangen/g, 'tan(')
+                .replace(/logaritma/g, 'log(')
+                .replace(/persen/g, '%')
+                .replace(/tambah|plus/g, '+')
+                .replace(/kurang|minus|kurangi/g, '-')
+                .replace(/kali|dikali|perkalian|x/g, '*')
+                .replace(/bagi|dibagi|per/g, '/')
+                .replace(/modulus|modulo|sisa bagi/g, ' MOD ');
+                
+            // Penggantian kata kunci angka (Tambahan untuk belasan)
+            expression = expression.replace(/satu/g, '1')
+                .replace(/dua/g, '2')
+                .replace(/tiga/g, '3')
+                .replace(/empat/g, '4')
+                .replace(/lima/g, '5')
+                .replace(/enam/g, '6')
+                .replace(/tujuh/g, '7')
+                .replace(/delapan/g, '8')
+                .replace(/sembilan/g, '9')
+                .replace(/nol|kosong/g, '0')
+                .replace(/koma|titik/g, '.');
 
             if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
             
-            // Baris 664: Logika Solver Sederhana (misal: "12 ke 48")
-            const simpleFlexMatch = command.match(/(\d+(\.\d+)?)\s+(ke|buat|jadi)\s+(\d+(\.\d+)?)/i);
-            let match = simpleFlexMatch;
+            // ---------------------------------------------------------------------
+            // FASE 2: Logika Khusus (Prioritas Tinggi)
+            // ---------------------------------------------------------------------
 
-            if (match) {
-                let num1 = match[1];
-                let num2 = match[4];
-                inputNumber = parseFloat(num1);
-                targetValue = parseFloat(num2);
-                isSolvingEquation = true; 
-                let solvedExpression = `${num2} / ${num1}`;
-                historyCurrentEl.textContent = `Pencarian Kombinasi: ${num1} ke ${num2} -> ${solvedExpression}`;
-                currentExpression = solvedExpression;
+            // LOGIKA UNTUK PERSEN (50% dari 70)
+            const percentOfMatch = command.match(/(\d+(\.\d+)?)\s*persen\s+dari\s*(\d+(\.\d+)?)/i); 
+            if (percentOfMatch) {
+                let percentValue = percentOfMatch[1];
+                let baseValue = percentOfMatch[3];
+                currentExpression = `${percentValue}/100*${baseValue}`; 
+                historyCurrentEl.textContent = `Persen dari Nilai: ${percentValue}% dari ${baseValue}`;
                 updateDisplay();
                 calculate();
                 return;
             }
-            
-            // Baris 686: Bersihkan dan hitung ekspresi suara
+
+            // LOGIKA UNTUK PERSEN (70 dari 100 persen)
+            const percentIsMatch = command.match(/(\d+(\.\d+)?)\s+dari\s*(\d+(\.\d+)?)\s*persen/i); 
+            if (percentIsMatch) {
+                let partValue = percentIsMatch[1];
+                let totalValue = percentIsMatch[3];
+                currentExpression = `(${partValue}/${totalValue})*100`; 
+                historyCurrentEl.textContent = `Nilai Persen: ${partValue} dari ${totalValue}`;
+                updateDisplay();
+                calculate();
+                return;
+            }
+
+            // ---------------------------------------------------------------------
+            // FASE 3: Pembersihan dan Eksekusi Ekspresi Fleksibel
+            // ---------------------------------------------------------------------
             let cleanSpeech = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
-            cleanSpeech = cleanSpeech.replace(/\s+/g, '');
+            
+            // KUNCI: Mengganti kata kunci penghubung dengan spasi tunggal, yang kemudian akan dihapus
+            cleanSpeech = cleanSpeech
+                .replace(/ ke /g, ' ')
+                .replace(/ jadi /g, ' ')
+                .replace(/ buat /g, ' ')
+                .replace(/ banding /g, ' ')
+                .replace(/ per /g, ' ')
+                .replace(/\s+/g, ''); // Hapus semua spasi
+
             
             if (cleanSpeech.length > 0) {
+                // Siapkan untuk tampilan visual (×, ÷) dan hitung
                 currentExpression = cleanSpeech.replace(/\*/g, '×').replace(/\//g, '÷').replace(/\^/g, '^').replace(/MOD/g, ' MOD ');
                 updateDisplay();
                 calculate();
@@ -626,16 +647,13 @@
                 item.classList.add('history-item');
                 let expressionText = record.expression;
                 let resultText = record.result;
-                if (record.combination) {
-                    // Format khusus untuk hasil solver
-                    expressionText = record.combination.finalExpression;
-                    resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'selisih' : 'kurang'} ${Math.abs(record.combination.Y)})`;
-                }
+                // Tidak ada lagi logika kombinasi khusus (solver)
+
                 item.innerHTML = `<div class="history-expression">${expressionText} =</div><div class="history-result">${resultText}</div>`;
                 // Baris 735: Klik riwayat untuk memuat ulang ekspresi
                 item.addEventListener('click', () => {
-                    if (record.combination) { currentExpression = String(record.combination.X); historyCurrentEl.textContent = `Jawaban: ${expressionText} = ${record.combination.target}`; } 
-                    else { currentExpression = String(record.result); historyCurrentEl.textContent = record.expression + ' ='; }
+                    currentExpression = String(record.result); 
+                    historyCurrentEl.textContent = record.expression + ' =';
                     lastResult = parseFloat(record.originalResult);
                     updateDisplay();
                     toggleHistoryPanel(false);
