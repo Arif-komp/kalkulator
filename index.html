@@ -12,6 +12,7 @@
         .main-container { position: relative; width: 100%; max-width: var(--calc-max-width); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 5px rgba(0, 0, 0, 0.05); border-radius: 20px; overflow: hidden; }
         .calculator { background-color: var(--card-color); padding: var(--padding-base); }
         .display-container { text-align: right; margin-bottom: 20px; padding: 10px 5px; }
+        /* Baris 65: Tampilan Riwayat/Preview */
         .history-current { font-size: 1em; color: #888; min-height: 1.1em; line-height: 1.1em; }
         .result { font-size: 3.5em; font-weight: 300; color: var(--text-color); overflow-x: scroll; white-space: nowrap; line-height: 1.2; direction: rtl; text-align: left; }
         .result::-webkit-scrollbar { height: 6px; }
@@ -31,23 +32,34 @@
         .eq { background-color: var(--primary-color); font-size: 1.4em; } 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px; }
         .header > div { display: flex; gap: 10px; } 
-        /* Halaman Kunci Dihilangkan */
         .burger-menu, .mic-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
         .mic-button span.material-icons { font-size: 1.6em; }
         .title { color: var(--primary-color); font-size: 1.8em; font-weight: 800; letter-spacing: 2px; margin: 0; }
+        
+        /* Baris 166: Riwayat Panel (Menggunakan kelas dari input pengguna) */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         .overlay.active { opacity: 1; visibility: visible; }
-        .panel { position: fixed; top: 0; width: var(--history-width); max-width: 80%; height: 100%; background: var(--history-bg); z-index: 1000; box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); transition: transform 0.3s; display: flex; flex-direction: column; }
-        #historyPanel { left: 0; transform: translateX(-100%); }
-        .panel.open { transform: translateX(0); }
-        .panel-header { padding: var(--padding-base); background-color: var(--card-color); border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        .panel-header h2 { margin: 0; font-size: 1.2em; color: var(--text-color); }
-        .panel-header button { background: none; border: none; cursor: pointer; color: #f44336; padding: 5px; }
-        .panel-content { padding: 0; flex-grow: 1; overflow-y: auto; } /* Padding dihilangkan dari konten */
+        .history-panel { 
+            position: fixed; top: 0; left: 0; 
+            width: var(--history-width); max-width: 80%; 
+            height: 100%; 
+            background: var(--history-bg); 
+            z-index: 1000; 
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); 
+            transform: translateX(-100%); 
+            transition: transform 0.3s; 
+            display: flex; flex-direction: column; 
+        }
+        .history-panel.open { transform: translateX(0); }
+        
+        .history-header { padding: var(--padding-base); background-color: var(--card-color); border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .history-header h2 { margin: 0; font-size: 1.2em; color: var(--text-color); }
+        .history-header button { background: none; border: none; cursor: pointer; color: #f44336; padding: 5px; }
+        .history-list { padding: 0; flex-grow: 1; overflow-y: auto; } /* Padding 0 untuk tampilan rapi */
         
         /* RIWAYAT BARU YANG RAPI */
         .history-item { 
-            padding: 15px var(--padding-base); /* Padding lebih lebar */
+            padding: 15px var(--padding-base); 
             border-bottom: 1px solid #ddd;
             cursor: pointer; 
             transition: background 0.2s; 
@@ -57,7 +69,7 @@
         .history-expression { 
             font-size: 0.9em; 
             color: #777; 
-            overflow-wrap: break-word; /* Memastikan teks panjang tidak merusak layout */
+            overflow-wrap: break-word; 
             direction: ltr;
             text-align: right;
             min-height: 1.2em;
@@ -85,8 +97,8 @@
 <body>
     <div class="overlay" id="overlay"></div> 
     
-    <div class="panel" id="historyPanel">
-        <div class="panel-header">
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
             <h2>Riwayat Perhitungan 🧾</h2>
             <div>
                 <button id="clearHistoryBtn" title="Hapus Semua Riwayat">
@@ -97,7 +109,7 @@
                 </button>
             </div>
         </div>
-        <div id="historyList" class="panel-content">
+        <div id="historyList" class="history-list">
             <p class="empty-history">Belum ada perhitungan.</p>
         </div>
     </div>
@@ -175,12 +187,12 @@
         // DOM elements
         const resultEl = document.getElementById('result');
         const historyCurrentEl = document.getElementById('history-current');
-        const historyListEl = document.getElementById('historyList');
+        const historyListEl = document.getElementById('historyList'); // ID tetap
         const micBtn = document.getElementById('micBtn');
         const buttons = document.querySelector('.buttons');
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         const burgerMenuBtn = document.getElementById('burgerMenu');
-        const historyPanel = document.getElementById('historyPanel');
+        const historyPanel = document.getElementById('historyPanel'); // ID tetap
         const overlay = document.getElementById('overlay');
         const closeHistoryPanelBtn = document.getElementById('closeHistoryPanelBtn');
 
@@ -268,17 +280,21 @@
             }
         }
         
+        // Baris 343: Memuat Riwayat dari LocalStorage
         function loadHistory() {
             const storedHistory = localStorage.getItem('calculatorHistory');
             if (storedHistory) { 
                 try { 
                     historyRecords = JSON.parse(storedHistory); 
                 } catch (e) { 
+                    console.error("Gagal memuat riwayat:", e);
                     historyRecords = []; 
                 } 
             }
             renderHistory();
         }
+
+        // Baris 357: Menyimpan Riwayat ke LocalStorage
         function saveHistory() { localStorage.setItem('calculatorHistory', JSON.stringify(historyRecords)); }
         
         function addToHistory(expression, result, combination = null, originalResult = null) {
@@ -350,7 +366,7 @@
         }
 
         // =================================================================
-        // LOGIKA SUARA
+        // LOGIKA SUARA (Dibiarkan sama)
         // =================================================================
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -371,7 +387,6 @@
             historyCurrentEl.textContent = 'Perintah Suara: ' + command;
             let expression = command;
             
-            // FASE 1: PENANGANAN PERINTAH KHUSUS (RUMUS, CLEAR)
             const formulaMatch = command.match(/rumus\s+(.+)/i);
             if (formulaMatch) {
                 const query = formulaMatch[1].trim();
@@ -387,7 +402,6 @@
             }
             if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
 
-            // FASE 2: Penggantian Kata Kunci Matematika ke Simbol/Fungsi
             expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(')
                 .replace(/pangkat/g, '^')
                 .replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(')
@@ -400,14 +414,11 @@
                 .replace(/modulus|modulo|sisa bagi/g, ' MOD ')
                 .replace(/jadi|ke|buat/g, ' '); 
                 
-            // Terjemahkan nama mata uang dan angka
             expression = expression
                 .replace(/dolar|us dollar/g, 'usd').replace(/rupiah|rp/g, 'idr').replace(/euro/g, 'eur').replace(/yen|jpy/g, 'jpy')
                 .replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3').replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6').replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9').replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
             
-            // FASE 3: Logika Khusus (Pencarian Variabel Implisit)
-
             // 1. PENCARIAN VARIABEL IMPLISIT (LOGIKA FORMAT KHUSUS)
             const implicitMatch = expression.match(/^(\d+(\.\d+)?)\s+(\d+(\.\d+)?)\s*(.*)/);
             if (implicitMatch) {
@@ -417,7 +428,6 @@
 
                 if (!isNaN(valA) && !isNaN(valB) && valA !== 0) {
                     
-                    // a. Hitung Target Akhir
                     remainingOp = remainingOp.trim()
                         .replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-')
                         .replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/')
@@ -442,8 +452,6 @@
                         currentExpression = 'Error'; updateDisplay(); return;
                     }
                     
-                    // b. Terapkan Logika Format Khusus (Pembagian dan Sisa)
-                    
                     const factorX = Math.floor(targetValue / valA); 
                     const remainder = parseFloat((targetValue - (valA * factorX)).toFixed(10)); 
                     
@@ -463,12 +471,25 @@
 
                     currentExpression = finalCalculation; 
                     
-                    historyCurrentEl.textContent = `${valA} ke ${targetExpression}. Dihitung sebagai: ${resultDisplay} =`;
+                    const historyExpression = `${valA} ke ${targetExpression}`;
+                    historyCurrentEl.textContent = `${historyExpression}. Dihitung sebagai: ${resultDisplay} =`;
                     
                     lastResult = parseFloat(finalCalculation); 
                     updateDisplay(); 
-                    addToHistory(resultDisplay, finalCalculation, null, finalCalculation); 
-                    return; // EXIT
+                    // SIMPAN DENGAN OBJEK COMBINATION UNTUK LOGIKA RIWAYAT KHUSUS
+                    addToHistory(
+                        resultDisplay, 
+                        finalCalculation, 
+                        { 
+                            finalExpression: historyExpression, 
+                            X: factorX, 
+                            Y: Math.abs(remainder), 
+                            operation: (remainder >= 0 ? '+' : '-'),
+                            target: targetValue
+                        }, 
+                        finalCalculation
+                    ); 
+                    return; 
                 }
             }
             
@@ -493,54 +514,67 @@
 
         // --- PANEL LOGIC ---
 
-        function togglePanel(panelEl, isOpen) {
+        // Mengganti nama fungsi agar sesuai dengan yang ada di event listener
+        function toggleHistoryPanel(isOpen) {
             if (isOpen) { 
-                panelEl.classList.add('open'); 
+                historyPanel.classList.add('open'); 
                 overlay.classList.add('active'); 
             } else { 
-                panelEl.classList.remove('open'); 
+                historyPanel.classList.remove('open'); 
                 overlay.classList.remove('active');
             }
         }
         
-        burgerMenuBtn.addEventListener('click', () => { togglePanel(historyPanel, true); });
-        closeHistoryPanelBtn.addEventListener('click', () => { togglePanel(historyPanel, false); });
-        // Key button dan panel dihilangkan, jadi event-nya tidak ada.
-        overlay.addEventListener('click', () => { togglePanel(historyPanel, false); });
+        burgerMenuBtn.addEventListener('click', () => { toggleHistoryPanel(true); });
+        closeHistoryPanelBtn.addEventListener('click', () => { toggleHistoryPanel(false); });
+        overlay.addEventListener('click', () => { toggleHistoryPanel(false); });
 
-        // Fungsi renderHistory yang telah dirapikan
+        // Baris 713: Fungsi untuk menampilkan riwayat di panel
         function renderHistory() {
             historyListEl.innerHTML = ''; 
-            if (historyRecords.length === 0) { 
-                historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>'; 
-                return; 
-            }
+            if (historyRecords.length === 0) { historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>'; return; }
             
             historyRecords.slice().reverse().forEach((record) => {
                 const item = document.createElement('div');
                 item.classList.add('history-item');
-                // Format lebih rapi: ekspresi di atas kecil, hasil di bawah besar.
-                item.innerHTML = `<div class="history-expression">${record.expression} =</div><div class="history-result">${record.result}</div>`;
                 
+                let expressionText = record.expression;
+                let resultText = record.result;
+                
+                // Logika format khusus untuk hasil solver (combination)
+                if (record.combination) {
+                    expressionText = record.combination.finalExpression;
+                    // Format hasil solver sesuai input pengguna
+                    resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'sisa' : 'kurang'} ${Math.abs(record.combination.Y)})`;
+                }
+
+                item.innerHTML = `<div class="history-expression">${expressionText} =</div><div class="history-result">${resultText}</div>`;
+                
+                // Baris 735: Klik riwayat untuk memuat ulang ekspresi
                 item.addEventListener('click', () => {
-                    currentExpression = String(record.originalResult); 
-                    historyCurrentEl.textContent = record.expression + ' =';
+                    if (record.combination) { 
+                        // Jika dari Solver, tampilkan hasilnya dan teks ekspresi asli di history-current
+                        currentExpression = String(record.originalResult); 
+                        historyCurrentEl.textContent = `Hasil Solver: ${record.combination.finalExpression} = ${record.combination.target}`; 
+                    } else { 
+                        // Jika perhitungan biasa
+                        currentExpression = String(record.originalResult); 
+                        historyCurrentEl.textContent = record.expression + ' ='; 
+                    }
                     lastResult = parseFloat(record.originalResult);
                     updateDisplay();
-                    togglePanel(historyPanel, false);
+                    toggleHistoryPanel(false);
                 });
                 historyListEl.appendChild(item);
             });
         }
         
+        // Baris 751: Event Listener Tombol Hapus Riwayat
         clearHistoryBtn.addEventListener('click', () => {
             historyRecords = [];
             localStorage.removeItem('calculatorHistory'); 
             renderHistory(); 
         });
-
-        // Halaman Kunci dihilangkan, jadi fungsi renderKeyList juga dihapus
-        // ...
 
         // --- INISIALISASI AKHIR ---
         buttons.addEventListener('click', (e) => {
@@ -552,7 +586,8 @@
             }
         });
 
-        loadHistory();
+        // Baris 777: Muat riwayat saat aplikasi dimuat
+        loadHistory(); 
         updateDisplay(); 
     </script>
 </body>
