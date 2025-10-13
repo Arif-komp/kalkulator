@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>Kalkulator Ilmiah AYIIPP - 4 Kolom Modern dan Responsif</title>
+    <title>Kalkulator Ilmiah Voice Ayiipp</title>
     
     <meta name="description" content="Kalkulator ilmiah modern 4 kolom yang rapi dengan fungsi trigonometri, logaritma, dan fitur voice input yang fleksibel.">
     
@@ -80,7 +80,7 @@
             line-height: 1.1em; 
         }
 
-        /* Baris 72: Tampilan Hasil/Input Utama (Kunci: Auto-Scroll Kanan) */
+        /* Baris 72: Tampilan Hasil/Input Utama (KUNCI: Auto-Scroll Kanan) */
         .result { 
             font-size: 3.5em; 
             font-weight: 300; 
@@ -88,15 +88,22 @@
             overflow-x: scroll; 
             white-space: nowrap; 
             line-height: 1.2; 
-            direction: rtl; /* Mengubah arah teks ke Kanan-ke-Kiri */
-            text-align: left; /* Teks diatur ke kiri agar scroll berfungsi benar */
+            /* KUNCI 1: Mengubah arah teks ke Kanan-ke-Kiri */
+            direction: rtl; 
+            /* KUNCI 2: Teks diatur ke kiri agar scroll berfungsi benar */
+            text-align: left; 
         }
 
         /* Baris 82: Mengembalikan arah karakter pertama */
         .result::first-letter {
             direction: ltr;
         }
-
+        /* KUNCI TAMBAHAN: Perataan teks untuk angka tunggal agar terlihat di kanan */
+        .result:empty, .result:not([style*="font-size: 2em"]):not([style*="font-size: 3.5em"]) {
+            direction: ltr; /* Override jika tidak ada perubahan font (untuk '0' awal) */
+            text-align: right;
+        }
+        
         /* Baris 87: Styling Scrollbar */
         .result::-webkit-scrollbar { height: 6px; }
         .result::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
@@ -295,9 +302,9 @@
         let currentExpression = '0';
         let lastResult = null;
         let historyRecords = []; 
-        let isSolvingEquation = false; // Dibiarkan sebagai warisan, tapi tidak digunakan
-        let targetValue = null; // Dibiarkan sebagai warisan, tapi tidak digunakan
-        let inputNumber = null; // Dibiarkan sebagai warisan, tapi tidak digunakan
+        let isSolvingEquation = false; 
+        let targetValue = null; 
+        let inputNumber = null; 
 
         // =================================================================
         // Baris 339: FUNGSI PERSISTENSI RIWAYAT (LocalStorage)
@@ -349,8 +356,19 @@
         function updateDisplay() {
             // Baris 387: Memperbarui tampilan utama
             resultEl.textContent = currentExpression;
+            
             // Baris 389: Menyesuaikan ukuran font jika ekspresi terlalu panjang
-            resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '3.5em';
+            if (currentExpression.length > 15) {
+                resultEl.style.fontSize = '2em';
+                // KUNCI PENTING: Terapkan RTL/LTR agar scroll berfungsi saat ekspresi panjang
+                resultEl.style.direction = 'rtl';
+                resultEl.style.textAlign = 'left';
+            } else {
+                resultEl.style.fontSize = '3.5em';
+                // Jika pendek (misal '0' atau '123'), atur kembali perataan kanan normal
+                resultEl.style.direction = 'ltr'; 
+                resultEl.style.textAlign = 'right';
+            }
             
             // Baris 393: KUNCI: Membuat input baru selalu terlihat (Auto-Scroll Kanan)
             resultEl.scrollLeft = 0;
@@ -575,7 +593,7 @@
             if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
             
             // ---------------------------------------------------------------------
-            // FASE 2: Logika Khusus (Prioritas Tinggi)
+            // FASE 2: Logika Khusus (Prioritas Tinggi) - PERSEN
             // ---------------------------------------------------------------------
 
             // LOGIKA UNTUK PERSEN (50% dari 70)
@@ -647,7 +665,6 @@
                 item.classList.add('history-item');
                 let expressionText = record.expression;
                 let resultText = record.result;
-                // Tidak ada lagi logika kombinasi khusus (solver)
 
                 item.innerHTML = `<div class="history-expression">${expressionText} =</div><div class="history-result">${resultText}</div>`;
                 // Baris 735: Klik riwayat untuk memuat ulang ekspresi
