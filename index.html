@@ -3,18 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Ilmiah AYIIPP</title>
+    
+    <title>Kalkulator Ilmiah AYIIPP - 4 Kolom Modern dan Responsif</title>
     
     <meta name="description" content="Kalkulator ilmiah modern 4 kolom yang rapi dengan fungsi trigonometri, logaritma, dan fitur voice input. Responsif dan cepat.">
+    
     <meta name="keywords" content="kalkulator, scientific calculator, kalkulator 4 kolom, kalkulator modern, kalkulator responsif, kalkulator web, kalkulator persen">
+    
     <meta name="author" content="Ayiipp">
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
+    
+    <style>
+        /* Baris 14: Variabel CSS untuk Warna dan Ukuran */
+        :root {
+            --primary-color: #00bcd4; /* Cyan */
+            --primary-dark: #0097a7;
+            --background-color: #eef1f5; /* Light Gray */
+            --card-color: #ffffff;
+            --text-color: #333;
+            --operator-color: #ff9800; /* Orange */
+            --scientific-color: #5c6bc0; /* Indigo */
+            --history-bg: #f5f7fa;
+            --calc-max-width: 400px;
+            --padding-base: 20px; 
+        }
+
+        /* Baris 27: Reset Box Model */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Baris 32: Styling Tubuh Dokumen */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* Baris 45: Kontainer Utama Kalkulator */
+        .main-container {
+            position: relative;
+            width: 100%;
+            max-width: var(--calc-max-width);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.05);
+            border-radius: 25px;
+            overflow: hidden;
+        }
+
+        /* Baris 54: Padding Kalkulator */
+        .calculator {
+            background-color: var(--card-color);
+            padding: var(--padding-base);
+        }
+
+        /* --- Layar Input/Output --- */
+        /* Baris 60: Kontainer Tampilan */
+        .display-container { 
+            text-align: right; 
+            margin-bottom: 20px; 
+            padding: 10px 5px; 
+        }
+        /* Baris 65: Tampilan Riwayat/Preview */
+        .history-current { 
+            font-size: 1em; 
+            color: #888; 
+            min-height: 1.1em; 
+            line-height: 1.1em; 
+        }
+
+        /* Baris 72: Tampilan Hasil/Input Utama (Kunci: Auto-Scroll Kanan) */
+        .result { 
+            font-size: 3.5em; 
+            font-weight: 300; 
+            color: var(--text-color); 
+            overflow-x: scroll; 
+            white-space: nowrap; 
+            line-height: 1.2; 
+            direction: rtl; /* Mengubah arah teks ke Kanan-ke-Kiri */
+            text-align: left; /* Teks diatur ke kiri agar scroll berfungsi benar */
+        }
+
+        /* Baris 82: Mengembalikan arah karakter pertama */
+        .result::first-letter {
+            direction: ltr;
+        }
+
+        /* Baris 87: Styling Scrollbar */
+        .result::-webkit-scrollbar { height: 6px; }
+        .result::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        .result::-webkit-scrollbar-track { background: transparent; }
+
+
+        /* --- Tombol Kalkulator (Grid 4 Kolom) --- */
+        /* Baris 95: Pengaturan Grid Utama */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 kolom sama besar */
+            gap: 10px; 
+        }
+
+        /* Baris 102: Styling Tombol Dasar */
+        .btn {
+            padding: 15px 0; 
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px; 
+            cursor: pointer;
+            transition: background-color 0.05s, box-shadow 0.05s, transform 0.05s; 
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+            min-height: 50px; 
+        }
+
+        /* Baris 115: Efek Saat Tombol Ditekan */
+        .btn:active {
+            transform: translateY(0.5px); 
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); 
+            filter: brightness(0.95); 
+        }
+
+        /* Baris 124: Penyesuaian Grid untuk BARIS TERAKHIR */
+        .buttons button[data-value="0"] { 
+            grid-column: 2 / span 2; 
+            grid-row: 8;
+            direction: ltr; 
+        } 
+        .buttons button[data-value="."]{ 
+            grid-column: 1; 
+            grid-row: 8;
+            direction: ltr;
+        }
+        .buttons button[data-value="="] { 
+            grid-column: 4; 
+            grid-row: 8;
+            direction: ltr;
+        }
+
+        /* Baris 140: GAYA TOMBOL Berdasarkan Kelas */
+        .num { background-color: #f0f0f0; color: var(--text-color); } /* Angka */
+        .op, .eq { background-color: var(--operator-color); color: white; font-weight: bold; } /* Operator Dasar */
+        .fn { background-color: #e0f7fa; color: var(--primary-dark); font-weight: 600; } /* Fungsi (C, %, Backspace) */
+        .sci { background-color: var(--scientific-color); color: white; font-size: 1em; font-weight: 500; box-shadow: 0 2px 4px rgba(92, 107, 192, 0.4); } /* Ilmiah */
+        .eq { background-color: var(--primary-color); font-size: 1.6em; } /* Sama Dengan */
+
+        /* Baris 148: Ukuran Ikon Kuadrat */
+        .buttons button[data-value="^2"] { font-size: 1.1em; }
+
+
+        /* --- Header dan Menu --- */
+        /* Baris 153: Layout Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; }
+        /* Baris 156: Tombol Menu dan Mic */
+        .burger-menu, .mic-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
+        .mic-button span.material-icons { font-size: 1.6em; }
+        /* Baris 160: Judul Aplikasi */
+        .title { color: var(--primary-color); font-size: 1.8em; font-weight: 800; letter-spacing: 2px; margin: 0; }
+        
+        /* ... (CSS untuk Riwayat Panel dan Responsif dihilangkan untuk fokus pada inti, tapi akan dimasukkan di kode akhir) ... */
+
+        /* Baris 166: Riwayat Panel */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        .overlay.active { opacity: 1; visibility: visible; }
+        .history-panel { position: fixed; top: 0; left: 0; width: var(--history-width); max-width: 80%; height: 100%; background: var(--history-bg); z-index: 1000; box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); transform: translateX(-100%); transition: transform 0.3s; display: flex; flex-direction: column; }
+        .history-panel.open { transform: translateX(0); }
+        .history-header { padding: var(--padding-base); background-color: var(--card-color); border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .history-header h2 { margin: 0; font-size: 1.2em; color: var(--text-color); }
+        .history-header button { background: none; border: none; cursor: pointer; color: #f44336; padding: 5px; }
+        .history-list { padding: var(--padding-base); flex-grow: 1; overflow-y: auto; }
+        .empty-history { text-align: center; color: #888; margin-top: 50px; }
+        .history-item { padding: 10px; margin-bottom: 10px; background: var(--card-color); border-radius: 8px; cursor: pointer; transition: background 0.2s; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+        .history-item:hover { background: #f0f0f0; }
+        .history-expression { font-size: 0.9em; color: #888; }
+        .history-result { font-size: 1.2em; font-weight: 600; color: var(--text-color); }
+
+        /* Baris 190: Responsif (Mobile View) */
+        @media (max-width: 550px) {
+            body {
+                align-items: flex-start;
+            }
+            .main-container {
+                border-radius: 0;
+                box-shadow: none;
+                min-height: 100vh;
+                max-width: none;
+            }
+            .calculator {
+                padding: 15px;
+            }
+            .buttons {
+                gap: 8px; 
+            }
+        }
+    </style>
+    </head>
 <body>
     <div class="overlay" id="overlay"></div> 
-    
     <div class="history-panel" id="historyPanel">
         <div class="history-header">
             <h2>Riwayat Perhitungan</h2>
@@ -57,7 +248,9 @@
                 <button class="btn sci" data-value="e">e</button>
                 <button class="btn sci" data-value="sqrt(">√</button>
 
-                <button class="btn fn" data-value="clear">C</button>    <button class="btn fn" data-value="%">%</button>        <button class="btn fn" data-value="module">MOD</button>
+                <button class="btn fn" data-value="clear">C</button>
+                <button class="btn fn" data-value="%">%</button>
+                <button class="btn fn" data-value="module">MOD</button>
                 <button class="btn sci" data-value="^2">x²</button>
 
                 <button class="btn op" data-value="(">(</button>
@@ -87,6 +280,395 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Baris 318: Inisialisasi DOM elements
+        const resultEl = document.getElementById('result');
+        const historyCurrentEl = document.getElementById('history-current');
+        const historyListEl = document.getElementById('historyList');
+        const micBtn = document.getElementById('micBtn');
+        const buttons = document.querySelector('.buttons');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const burgerMenuBtn = document.getElementById('burgerMenu');
+        const historyPanel = document.getElementById('historyPanel');
+        const overlay = document.getElementById('overlay');
+
+        // Baris 330: Variabel Status Global
+        let currentExpression = '0';
+        let lastResult = null;
+        let historyRecords = []; 
+        let isSolvingEquation = false;
+        let targetValue = null;
+        let inputNumber = null;
+
+        // =================================================================
+        // Baris 339: FUNGSI PERSISTENSI RIWAYAT (LocalStorage)
+        // =================================================================
+
+        function loadHistory() {
+            // Baris 343: Memuat Riwayat dari LocalStorage
+            const storedHistory = localStorage.getItem('calculatorHistory');
+            if (storedHistory) {
+                try {
+                    historyRecords = JSON.parse(storedHistory);
+                } catch (e) {
+                    console.error("Gagal memuat riwayat:", e);
+                    historyRecords = [];
+                }
+            }
+            renderHistory();
+        }
+
+        function saveHistory() {
+            // Baris 357: Menyimpan Riwayat ke LocalStorage
+            localStorage.setItem('calculatorHistory', JSON.stringify(historyRecords));
+        }
+
+        // =================================================================
+        // Baris 363: FUNGSI MATEMATIKA & UTILITY
+        // =================================================================
+
+        function cleanExpression(expression) {
+            // Baris 368: Mengganti simbol/fungsi yang mudah dibaca menjadi kode yang bisa dieksekusi JavaScript
+            let cleaned = expression
+                .replace(/÷/g, '/')
+                .replace(/×/g, '*')
+                .replace(/MOD/g, '%')
+                .replace(/\^/g, '**') // Operator pangkat
+                .replace(/%/g, '/100') // Penanganan Persen
+                .replace(/sin\(/g, 'Math.sin(')
+                .replace(/cos\(/g, 'Math.cos(')
+                .replace(/tan\(/g, 'Math.tan(')
+                .replace(/log\(/g, 'Math.log10(') // Logaritma Basis 10
+                .replace(/sqrt\(/g, 'Math.sqrt(')
+                .replace(/pi/g, 'Math.PI')
+                .replace(/e/g, 'Math.E');
+
+            return cleaned;
+        }
+
+        function updateDisplay() {
+            // Baris 387: Memperbarui tampilan utama
+            resultEl.textContent = currentExpression;
+            // Baris 389: Menyesuaikan ukuran font jika ekspresi terlalu panjang
+            resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '3.5em';
+            
+            // Baris 393: KUNCI: Membuat input baru selalu terlihat (Auto-Scroll Kanan)
+            resultEl.scrollLeft = 0;
+        }
+
+        function previewCalculation() {
+            // Baris 399: Fungsi untuk menampilkan hasil preview (di baris atas)
+            let expressionToCalculate = currentExpression;
+
+            if (expressionToCalculate === '0' || expressionToCalculate === 'Error') {
+                historyCurrentEl.textContent = '';
+                return;
+            }
+            
+            // Baris 408: Jangan preview jika karakter terakhir adalah operator
+            if (/[+\-×÷ MOD\^()]$/.test(expressionToCalculate.slice(-1))) {
+                historyCurrentEl.textContent = expressionToCalculate + '...';
+                return;
+            }
+
+            if (isSolvingEquation) return; 
+
+            try {
+                // Baris 419: Hitung preview
+                const expression = cleanExpression(expressionToCalculate);
+                let calculatedResult = (new Function('return ' + expression))();
+                
+                if (!isFinite(calculatedResult)) {
+                    historyCurrentEl.textContent = 'Invalid Input';
+                    return;
+                }
+
+                // Baris 429: Batasi desimal untuk preview
+                calculatedResult = parseFloat(calculatedResult.toFixed(10)); 
+                let formattedResult = String(calculatedResult);
+                
+                historyCurrentEl.textContent = ' = ' + formattedResult;
+
+            } catch (error) {
+                historyCurrentEl.textContent = expressionToCalculate + '...'; 
+            }
+        }
+
+        function calculate() {
+            // Baris 443: Fungsi utama untuk menghitung ekspresi
+            let expressionToCalculate = currentExpression;
+
+            if (expressionToCalculate === '0' || expressionToCalculate === 'Error') return;
+
+            try {
+                const expression = cleanExpression(expressionToCalculate);
+                let calculatedResult = (new Function('return ' + expression))();
+                
+                if (!isFinite(calculatedResult)) {
+                    throw new Error("Invalid Calculation");
+                }
+
+                let formattedResult;
+                let combinationDetails = null;
+
+                // Baris 461: Logika untuk kasus khusus (Solver)
+                if (isSolvingEquation && calculatedResult % 1 !== 0) {
+                    
+                    let X = Math.round(calculatedResult);
+                    let Y = 0;
+                    let finalExpression = expressionToCalculate;
+
+                    if (expressionToCalculate.includes('/') && targetValue !== null && inputNumber !== null) {
+                        let actualResult = X * inputNumber;
+                        Y = targetValue - actualResult;
+                        
+                        finalExpression = `${inputNumber} × ${X} ${Y >= 0 ? '+' : '-'} ${Math.abs(Y)}`;
+                        formattedResult = `${X}`; 
+
+                        combinationDetails = { X: X, Y: Y, finalExpression: finalExpression, target: targetValue, operation: Y >= 0 ? '+' : '-' };
+                    }
+                    
+                    if (combinationDetails === null) {
+                        // Jika bukan solver, bulatkan saja
+                        X = Math.round(calculatedResult);
+                        formattedResult = String(X);
+                    }
+                    addToHistory(expressionToCalculate, formattedResult, combinationDetails, calculatedResult);
+
+                } else {
+                    // Baris 492: Kasus perhitungan normal
+                    calculatedResult = parseFloat(calculatedResult.toFixed(10));
+                    formattedResult = String(calculatedResult);
+                    addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
+                }
+
+                historyCurrentEl.textContent = expressionToCalculate + ' =';
+                lastResult = calculatedResult;
+                
+                if (combinationDetails) {
+                    resultEl.textContent = combinationDetails.X;
+                    historyCurrentEl.textContent = `Pilihan Bulat: ${combinationDetails.finalExpression} ≈ ${combinationDetails.target}`;
+                } else {
+                    currentExpression = formattedResult;
+                }
+
+                updateDisplay();
+
+            } catch (error) {
+                // Baris 514: Penanganan Error
+                historyCurrentEl.textContent = expressionToCalculate + ' =';
+                currentExpression = 'Error';
+                lastResult = null;
+                updateDisplay();
+                console.error("Calculation Error:", error);
+            } finally {
+                isSolvingEquation = false; 
+                targetValue = null;
+                inputNumber = null;
+            }
+        }
+
+        function addToHistory(expression, result, combination = null, originalResult = null) {
+            // Baris 531: Menyimpan ke array riwayat
+            if (expression !== 'Error' && expression !== '0') {
+                historyRecords.push({ expression: expression, result: result, combination: combination, originalResult: originalResult || result });
+                saveHistory(); 
+                renderHistory();
+            }
+        }
+
+
+        function handleButton(value) {
+            // Baris 542: Fungsi penanganan klik tombol
+            
+            if (value === 'clear') { // Tombol "C"
+                currentExpression = '0';
+                historyCurrentEl.textContent = '';
+                lastResult = null;
+                updateDisplay(); 
+                return;
+            
+            } else if (value === '=') {
+                calculate();
+                return;
+
+            } else if (value === '%') { // Tombol "%"
+                // Baris 557: Memastikan % hanya bisa ditambahkan setelah angka atau tutup kurung
+                if (/[0-9)]$/.test(currentExpression.slice(-1))) { 
+                    currentExpression += '%'; 
+                } else {
+                    return;
+                }
+            } else if (value === 'backspace') {
+                // Baris 566: Tombol Hapus (Backspace)
+                if (currentExpression === 'Error') { currentExpression = '0'; } 
+                else if (lastResult !== null) { currentExpression = '0'; lastResult = null; } 
+                else {
+                    currentExpression = currentExpression.slice(0, -1);
+                    // Menghapus ' MOD ' secara keseluruhan
+                    if (currentExpression.endsWith(' MOD ')) {
+                        currentExpression = currentExpression.slice(0, -5);
+                    }
+                    if (currentExpression.length === 0) { currentExpression = '0'; }
+                }
+                currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
+                updateDisplay();
+                previewCalculation();
+                return;
+
+            } else if (value === '^2') { // Tombol Kuadrat
+                  if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
+                  else if (currentExpression === 'Error' || currentExpression === '0') { currentExpression = '0^2'; }
+                  else { currentExpression += '0^2'; }
+                
+            } else {
+                // Baris 598: Penanganan Angka dan Operator lainnya
+                const isOperator = /[+\-×÷ MOD()^%]/.test(value) || value.includes('(');
+                
+                if (lastResult !== null && lastResult !== undefined) {
+                    // Jika ada hasil terakhir, mulai ekspresi baru
+                    if (isOperator) { currentExpression = String(lastResult) + value; } 
+                    else { currentExpression = value; }
+                    lastResult = null;
+                    historyCurrentEl.textContent = '';
+                
+                } else {
+                    // Tambahkan nilai tombol ke ekspresi saat ini
+                    if (currentExpression === '0' && value !== '.') { currentExpression = value; } 
+                    else { currentExpression += value; }
+                }
+            }
+            
+            // Baris 617: Ganti simbol internal (*) menjadi simbol visual (×)
+            currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
+            updateDisplay();
+            previewCalculation(); 
+        }
+
+        // =================================================================
+        // Baris 625: LOGIKA RIWAYAT, MENU, DAN SUARA
+        // =================================================================
+
+        // Baris 629: Inisialisasi API Pengenalan Suara
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'id-ID';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.onstart = () => { micBtn.innerHTML = '<span class="material-icons">mic</span> Mendengarkan...'; micBtn.classList.add('listening'); };
+            recognition.onend = () => { micBtn.innerHTML = '<span class="material-icons">mic</span>'; micBtn.classList.remove('listening'); };
+            recognition.onresult = (event) => { processVoiceCommand(event.results[0][0].transcript.toLowerCase()); };
+            recognition.onerror = (event) => { console.error("Kesalahan Pengenalan Suara:", event.error); micBtn.innerHTML = '<span class="material-icons">mic</span> Error'; micBtn.classList.remove('listening'); };
+            micBtn.addEventListener('click', () => { try { recognition.start(); } catch (e) { console.warn("Recognition already started or error in browser support.", e); } });
+        } else { micBtn.style.display = 'none'; } // Sembunyikan tombol jika API tidak didukung
+
+        function processVoiceCommand(command) {
+            // Baris 650: Mengubah perintah suara menjadi ekspresi matematika
+            historyCurrentEl.textContent = 'Perintah Suara: ' + command;
+            let expression = command;
+            
+            // Baris 654: Penggantian kata kunci ke simbol matematika/fungsi
+            expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(').replace(/pangkat/g, '^').replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(').replace(/logaritma/g, 'log(').replace(/persen/g, '%').replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-').replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/').replace(/modulus|modulo|sisa bagi/g, ' MOD ');
+            expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3').replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6').replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9').replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
+
+            if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
+            
+            // Baris 664: Logika Solver Sederhana (misal: "12 ke 48")
+            const simpleFlexMatch = command.match(/(\d+(\.\d+)?)\s+(ke|buat|jadi)\s+(\d+(\.\d+)?)/i);
+            let match = simpleFlexMatch;
+
+            if (match) {
+                let num1 = match[1];
+                let num2 = match[4];
+                inputNumber = parseFloat(num1);
+                targetValue = parseFloat(num2);
+                isSolvingEquation = true; 
+                let solvedExpression = `${num2} / ${num1}`;
+                historyCurrentEl.textContent = `Pencarian Kombinasi: ${num1} ke ${num2} -> ${solvedExpression}`;
+                currentExpression = solvedExpression;
+                updateDisplay();
+                calculate();
+                return;
+            }
+            
+            // Baris 686: Bersihkan dan hitung ekspresi suara
+            let cleanSpeech = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
+            cleanSpeech = cleanSpeech.replace(/\s+/g, '');
+            
+            if (cleanSpeech.length > 0) {
+                currentExpression = cleanSpeech.replace(/\*/g, '×').replace(/\//g, '÷').replace(/\^/g, '^').replace(/MOD/g, ' MOD ');
+                updateDisplay();
+                calculate();
+            }
+        }
+
+        // Baris 698: Fungsi untuk membuka/menutup panel riwayat
+        function toggleHistoryPanel(isOpen) {
+            if (isOpen) { historyPanel.classList.add('open'); overlay.classList.add('active'); } 
+            else { historyPanel.classList.remove('open'); overlay.classList.remove('active'); }
+        }
+        // Baris 704: Event Listener Tombol Menu
+        burgerMenuBtn.addEventListener('click', () => {
+            const isCurrentlyOpen = historyPanel.classList.contains('open');
+            toggleHistoryPanel(!isCurrentlyOpen);
+        });
+        // Baris 709: Event Listener Overlay
+        overlay.addEventListener('click', () => { toggleHistoryPanel(false); });
+
+        function renderHistory() {
+            // Baris 713: Fungsi untuk menampilkan riwayat di panel
+            historyListEl.innerHTML = '';
+            if (historyRecords.length === 0) { historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>'; return; }
+            historyRecords.slice().reverse().forEach((record) => {
+                const item = document.createElement('div');
+                item.classList.add('history-item');
+                let expressionText = record.expression;
+                let resultText = record.result;
+                if (record.combination) {
+                    // Format khusus untuk hasil solver
+                    expressionText = record.combination.finalExpression;
+                    resultText = `X=${record.combination.X} (${record.combination.operation === '+' ? 'selisih' : 'kurang'} ${Math.abs(record.combination.Y)})`;
+                }
+                item.innerHTML = `<div class="history-expression">${expressionText} =</div><div class="history-result">${resultText}</div>`;
+                // Baris 735: Klik riwayat untuk memuat ulang ekspresi
+                item.addEventListener('click', () => {
+                    if (record.combination) { currentExpression = String(record.combination.X); historyCurrentEl.textContent = `Jawaban: ${expressionText} = ${record.combination.target}`; } 
+                    else { currentExpression = String(record.result); historyCurrentEl.textContent = record.expression + ' ='; }
+                    lastResult = parseFloat(record.originalResult);
+                    updateDisplay();
+                    toggleHistoryPanel(false);
+                });
+                historyListEl.appendChild(item);
+            });
+        }
+
+        // Baris 751: Event Listener Tombol Hapus Riwayat
+        clearHistoryBtn.addEventListener('click', () => {
+            historyRecords = [];
+            localStorage.removeItem('calculatorHistory'); 
+            renderHistory();
+        });
+
+        // Baris 759: Event Listener Global untuk semua tombol kalkulator
+        buttons.addEventListener('click', (e) => {
+            let target = e.target;
+            if (!target.classList.contains('btn')) { target = target.closest('.btn'); }
+            if (target) {
+                const value = target.getAttribute('data-value');
+                // Penanganan spasi untuk MOD
+                if (value === 'module') { handleButton(' MOD '); } else { handleButton(value); }
+            }
+        });
+
+
+        // =================================================================
+        // Baris 773: INISIALISASI AKHIR
+        // =================================================================
+
+        loadHistory(); // Baris 777: Muat riwayat saat aplikasi dimuat
+        updateDisplay(); // Baris 778: Atur tampilan awal
+    </script>
 </body>
 </html>
