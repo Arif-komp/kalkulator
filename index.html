@@ -427,7 +427,6 @@
                 const valA = parseFloat(implicitMatch[1]); 
                 const valB = parseFloat(implicitMatch[3]); 
                 let remainingOp = implicitMatch[5] || ''; 
-                // const originalVoiceTarget = valB + remainingOp; // Tidak dipakai
 
                 if (!isNaN(valA) && !isNaN(valB) && valA !== 0) {
                     
@@ -468,148 +467,11 @@
                         resultExpression = `${valA} × ${factorX} + ${remainder}`;
                         finalCalculation = `${valA * factorX + remainder}`;
                     } else { 
-                        // Jika remainder negatif, hitung dari pembulatan ke atas untuk tampilan pengurangan yang rapi
                         const factorX_ceil = Math.ceil(targetValue / valA);
                         const difference = Math.abs(parseFloat((factorX_ceil * valA - targetValue).toFixed(10)));
                         
-                        // Gunakan pengurangan jika selisihnya lebih kecil atau hasilnya bilangan bulat
                         if (targetValue % valA === 0 || difference < Math.abs(remainder)) {
                            resultExpression = `${valA} × ${factorX_ceil} - ${difference}`;
                         } else {
-                           // Jika mendekati dari bawah (faktorX) dan lebih baik
                            resultExpression = `${valA} × ${factorX} + ${remainder}`;
                         }
-                        
-                        finalCalculation = `${targetValue}`;
-                    }
-                    
-                    // Ganti * menjadi × untuk tampilan yang cantik
-                    resultExpression = resultExpression.replace(/\*/g, '×');
-
-                    currentExpression = String(targetValue); 
-                    
-                    // Display di history-current (Layar Utama) tetap berupa pertanyaan agar pengguna tahu apa yang dihitung
-                    const historyQuestion = `${valA} di apakan agar bisa mendapatkan ${targetValue}?`;
-                    historyCurrentEl.textContent = historyQuestion;
-                    
-                    lastResult = parseFloat(finalCalculation); 
-                    updateDisplay(); 
-                    
-                    // SIMPAN RIWAYAT (PERUBAHAN UTAMA UNTUK HISTORY PANEL)
-                    // Baris Atas History Panel: Langkah Lengkap (resultExpression)
-                    // Baris Bawah History Panel: Hasil Akhir (finalCalculation)
-                    addToHistory(
-                        resultExpression, // Baris Atas History Panel (15 x 33 + 5)
-                        String(targetValue), // Baris Bawah History Panel (500)
-                        { 
-                            question: historyQuestion, // Simpan pertanyaan untuk dimuat kembali
-                            target: targetValue,
-                        }, 
-                        String(targetValue) // Nilai akhir 
-                    ); 
-                    return; 
-                }
-            }
-            
-            // FASE 4: Eksekusi Ekspresi Fleksibel (Operasi Biasa)
-            let finalExpression = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
-
-            finalExpression = finalExpression
-                .replace(/perm\s+(\d+)\s+(\d+)/g, 'perm($1,$2)')
-                .replace(/comb\s+(\d+)\s+(\d+)/g, 'comb($1,$2)');
-
-            finalExpression = finalExpression
-                .replace(/\s*([\+\-\*\/%MOD\^])\s*/g, '$1') 
-                .replace(/[\+\-\*\/%MOD\^]$/, '') 
-                .replace(/\s+/g, ''); 
-
-            if (finalExpression.length > 0) {
-                currentExpression = finalExpression.replace(/\*/g, '×').replace(/\//g, '÷').replace(/\^/g, '^').replace(/MOD/g, ' MOD ');
-                updateDisplay();
-                calculate();
-            }
-        }
-
-        // --- PANEL LOGIC ---
-
-        function toggleHistoryPanel(isOpen) {
-            if (isOpen) { 
-                historyPanel.classList.add('open'); 
-                overlay.classList.add('active'); 
-            } else { 
-                historyPanel.classList.remove('open'); 
-                overlay.classList.remove('active');
-            }
-        }
-        
-        burgerMenuBtn.addEventListener('click', () => { toggleHistoryPanel(true); });
-        closeHistoryPanelBtn.addEventListener('click', () => { toggleHistoryPanel(false); });
-        overlay.addEventListener('click', () => { toggleHistoryPanel(false); });
-
-        // FUNGSI UTAMA DISPLAY RIWAYAT
-        function renderHistory() {
-            historyListEl.innerHTML = ''; 
-            if (historyRecords.length === 0) { historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>'; return; }
-            
-            historyRecords.slice().reverse().forEach((record) => {
-                const item = document.createElement('div');
-                item.classList.add('history-item');
-                
-                let expressionText = record.expression;
-                let resultText = record.result;
-                
-                if (record.combination) {
-                    // JIKA SOLVER (PERMINTAAN TERAKHIR ANDA):
-                    // Baris Atas: Langkah Lengkap (15 × 33 + 5)
-                    // Baris Bawah: Hasil Akhir (500)
-                    expressionText = record.expression; 
-                    resultText = record.result; 
-                } else {
-                    // JIKA PERHITUNGAN BIASA (Standar):
-                    // Baris Atas: Ekspresi Awal (100 × sin(30))
-                    // Baris Bawah: Hasil Akhir (50)
-                    expressionText = record.expression; 
-                    resultText = record.result;
-                }
-
-                item.innerHTML = `<div class="history-expression">${expressionText} =</div><div class="history-result">${resultText}</div>`;
-                
-                item.addEventListener('click', () => {
-                    if (record.combination) { 
-                        // Muat hasil akhirnya (500) dan tampilkan pertanyaan aslinya di preview
-                        currentExpression = String(record.originalResult); 
-                        historyCurrentEl.textContent = record.combination.question; 
-                    } else { 
-                        // Muat hasil akhirnya (50) dan tampilkan ekspresi di preview
-                        currentExpression = String(record.originalResult); 
-                        historyCurrentEl.textContent = record.expression + ' ='; 
-                    }
-                    lastResult = parseFloat(record.originalResult);
-                    updateDisplay();
-                    toggleHistoryPanel(false);
-                });
-                historyListEl.appendChild(item);
-            });
-        }
-        
-        clearHistoryBtn.addEventListener('click', () => {
-            historyRecords = [];
-            localStorage.removeItem('calculatorHistory'); 
-            renderHistory(); 
-        });
-
-        // --- INISIALISASI AKHIR ---
-        buttons.addEventListener('click', (e) => {
-            let target = e.target;
-            if (!target.classList.contains('btn')) { target = target.closest('.btn'); }
-            if (target) {
-                const value = target.getAttribute('data-value');
-                if (value === 'module') { handleButton(' MOD '); } else { handleButton(value); }
-            }
-        });
-
-        loadHistory(); 
-        updateDisplay(); 
-    </script>
-</body>
-</html>
