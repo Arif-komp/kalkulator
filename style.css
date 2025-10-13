@@ -1,16 +1,20 @@
 :root {
-    /* Palet warna yang lebih lembut dan profesional */
-    --primary-color: #00bcd4; /* Cyan - Lebih Modern */
+    /* Palet warna modern */
+    --primary-color: #00bcd4; /* Cyan */
     --primary-dark: #0097a7;
-    --background-color: #eef1f5; /* Abu-abu muda yang modern */
+    --background-color: #eef1f5; /* Light Gray */
     --card-color: #ffffff;
     --text-color: #333;
-    --operator-color: #ff9800; /* Oranye */
+    --operator-color: #ff9800; /* Orange */
     --scientific-color: #5c6bc0; /* Indigo */
     --history-bg: #f5f7fa;
     --history-width: 350px; 
     --calc-max-width: 400px;
     --padding-base: 20px; 
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body {
@@ -22,9 +26,7 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
     overflow-x: hidden;
-    /* Sensitivitas: Hilangkan highlight sentuhan default */
     -webkit-tap-highlight-color: transparent; 
 }
 
@@ -42,10 +44,40 @@ body {
     padding: var(--padding-base);
 }
 
-/* --- Tombol Kalkulator (Grid) --- */
+/* --- Layar Input/Output --- */
+.display-container { 
+    text-align: right; 
+    margin-bottom: 20px; 
+    padding: 10px 5px; 
+}
+.history-current { 
+    font-size: 1em; 
+    color: #888; 
+    min-height: 1.1em; 
+    line-height: 1.1em; 
+}
+
+.result { 
+    font-size: 3.5em; 
+    font-weight: 300; 
+    color: var(--text-color); 
+    overflow-x: scroll; /* Mengizinkan scroll horizontal */
+    white-space: nowrap; /* Memastikan ekspresi tetap dalam satu baris */
+    line-height: 1.2; 
+    /* KUNCI: Membuat input terbaru selalu terlihat */
+    direction: rtl; /* Mengubah arah teks ke Kanan-ke-Kiri */
+    text-align: left; /* Teks diatur ke kiri agar scroll berfungsi benar */
+}
+
+/* Scrollbar styling untuk .result (opsional, untuk kerapian) */
+.result::-webkit-scrollbar { height: 6px; }
+.result::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+.result::-webkit-scrollbar-track { background: transparent; }
+
+
+/* --- Tombol Kalkulator (Grid 4 Kolom) --- */
 .buttons {
     display: grid;
-    /* SEMUA TAMPILAN: 4 kolom */
     grid-template-columns: repeat(4, 1fr); 
     gap: 10px; 
 }
@@ -56,14 +88,12 @@ body {
     border: none;
     border-radius: 10px; 
     cursor: pointer;
-    /* Sensitivitas: Transisi sangat cepat */
     transition: background-color 0.05s, box-shadow 0.05s, transform 0.05s; 
     font-weight: 500;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
     min-height: 50px; 
 }
 
-/* Sensitivitas: Tombol ditekan */
 .btn:active {
     transform: translateY(0.5px); 
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); 
@@ -71,54 +101,18 @@ body {
 }
 
 /* Penyesuaian Grid untuk BARIS TERAKHIR */
-
-/* Tombol 0 (di tengah baris terakhir, setelah '.') */
-.buttons button[data-value="0"] {
-    grid-column: span 2; /* Tombol 0 memanjang 2 kolom */
+.buttons button[data-value="0"] { 
+    grid-column: 2 / span 2; 
+    grid-row: 8;
+} 
+.buttons button[data-value="."]{ 
+    grid-column: 1; 
+    grid-row: 8;
 }
-
-/* Tombol = (di akhir baris terakhir) */
-.buttons button[data-value="="] {
-    /* Tombol = memanjang 1 kolom, tapi mencakup dua baris */
-    grid-row: 7 / span 2; /* Mulai dari baris 7, rentang 2 baris (mencakup baris 7 dan 8) */
-    grid-column: 4 / span 1; /* Di kolom terakhir */
+.buttons button[data-value="="] { 
+    grid-column: 4; 
+    grid-row: 8;
 }
-
-/* Tombol + (di baris 7) dan Tombol . (di baris 8) perlu disesuaikan 
-   karena tombol = mengambil kolom 4 dari baris 7 */
-.buttons button[data-value="+"] {
-    /* Pindahkan + dari kolom 4 ke kolom 3 di baris 7 */
-    grid-column: 3 / span 1;
-    grid-row: 7;
-}
-
-/* Tombol 1, 2, 3 (Baris 7, Kolom 1, 2, 3) -> Diatur ulang karena '+' pindah ke Kolom 3 */
-.buttons button[data-value="1"] { grid-column: 1; grid-row: 7; }
-.buttons button[data-value="2"] { grid-column: 2; grid-row: 7; }
-.buttons button[data-value="3"] { 
-    /* Dihilangkan karena '+' sekarang di kolom 3 */
-    display: none; 
-} 
-
-/* PENTING: Mengubah penempatan baris 7 & 8 untuk mencerminkan urutan tombol di HTML */
-/* Urutan baru:
-   B7: 1, 2, 3, + 
-   B8: ., 0, = 
-   
-   Karena tombol '=' span 2 baris di kolom 4, kita harus memastikan 
-   baris 7 dan 8 menggunakan 3 kolom pertama */
-   
-/* Baris 7: 1, 2, 3, (dihilangkan karena =) */
-.buttons button[data-value="1"] { grid-column: 1; grid-row: 7; }
-.buttons button[data-value="2"] { grid-column: 2; grid-row: 7; }
-.buttons button[data-value="3"] { grid-column: 3; grid-row: 7; }
-.buttons button[data-value="+"] { grid-column: 4; grid-row: 7; } /* Ditempatkan di kolom 4 di baris 7 */
-
-/* Baris 8: ., 0, = */
-.buttons button[data-value="."] { grid-column: 1; grid-row: 8; } 
-.buttons button[data-value="0"] { grid-column: 2 / span 2; grid-row: 8; } /* Memanjang dari kolom 2 ke 3 */
-.buttons button[data-value="="] { grid-column: 4; grid-row: 8; } /* Di kolom 4, Baris 8 (span 1) */
-
 
 /* GAYA TOMBOL */
 .num { background-color: #f0f0f0; color: var(--text-color); }
@@ -127,56 +121,30 @@ body {
 .sci { background-color: var(--scientific-color); color: white; font-size: 1em; font-weight: 500; box-shadow: 0 2px 4px rgba(92, 107, 192, 0.4); }
 .eq { background-color: var(--primary-color); font-size: 1.6em; }
 
-/* Menyesuaikan tombol x^2 di HTML */
-.buttons button[data-value="^2"] {
-    font-size: 1.1em;
-}
+.buttons button[data-value="^2"] { font-size: 1.1em; }
 
 
-/* --- Bagian Lain --- */
+/* --- Header dan Menu --- */
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; }
 .burger-menu, .mic-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
-.burger-menu { font-size: 1.5em; }
-.mic-button { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; }
 .mic-button span.material-icons { font-size: 1.6em; }
 .title { color: var(--primary-color); font-size: 1.8em; font-weight: 800; letter-spacing: 2px; margin: 0; }
-.display-container { text-align: right; margin-bottom: 20px; padding: 10px 5px; }
-.history-current { font-size: 1em; color: #888; min-height: 1.1em; line-height: 1.1em; }
-.result { font-size: 3.5em; font-weight: 300; color: var(--text-color); overflow-x: auto; white-space: nowrap; line-height: 1.2; }
-.history-panel { position: fixed; top: 0; right: 0; height: 100%; width: var(--history-width); background-color: var(--history-bg); box-shadow: -8px 0 20px rgba(0, 0, 0, 0.3); transform: translateX(100%); transition: transform 0.3s ease-in-out; padding: var(--padding-base); z-index: 1000; display: flex; flex-direction: column; }
-.history-panel.open { transform: translateX(0); }
-.history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.history-list { flex-grow: 1; overflow-y: auto; padding-right: 10px; }
-.history-item { padding: 10px 5px; border-bottom: 1px solid #eee; cursor: pointer; transition: background-color 0.2s; text-align: right; }
-.history-item:last-child { border-bottom: none; }
-.history-item:hover { background-color: #e0f7fa; }
-.history-expression { font-size: 0.9em; color: #666; margin-bottom: 3px; word-wrap: break-word; white-space: normal; }
-.history-result { font-size: 1.4em; font-weight: 600; color: var(--text-color); word-wrap: break-word; white-space: normal; }
-.empty-history { color: #999; text-align: center; margin-top: 20px; }
-#clearHistoryBtn { background: none; border: none; color: var(--primary-dark); cursor: pointer; padding: 5px; transition: color 0.2s; }
-#clearHistoryBtn:hover { color: #e53935; }
-.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-.overlay.active { opacity: 1; pointer-events: auto; }
 
-/* --- RESPONSIVITAS MOBILE: Memaksimalkan ukuran di layar kecil --- */
+/* --- Responsif (Mobile View) --- */
 @media (max-width: 550px) {
-    .main-container {
-        border-radius: 0;
-        box-shadow: none;
-        min-height: 100vh;
-        max-width: none;
-    }
-    .calculator {
-        padding: 15px;
-    }
-    
-    .buttons {
-        gap: 8px; /* Sedikit lebih kecil di mobile */
-    }
-    
-    /* Tombol-tombol di baris 7 dan 8 yang di-span tetap berjalan baik */
-    /* Kita hanya perlu memastikan tombol '3' yang sebelumnya disembunyikan, sekarang terlihat */
-    .buttons button[data-value="3"] { 
-        display: block; 
-    } 
+    body {
+        align-items: flex-start; /* Geser ke atas di layar kecil */
+    }
+    .main-container {
+        border-radius: 0;
+        box-shadow: none;
+        min-height: 100vh;
+        max-width: none;
+    }
+    .calculator {
+        padding: 15px;
+    }
+    .buttons {
+        gap: 8px; 
+    }
 }
