@@ -107,7 +107,7 @@ body {
 .display-container { text-align: right; margin-bottom: 20px; padding: 10px 5px; }
 .history-current { font-size: 1em; color: #888; min-height: 1.1em; line-height: 1.1em; }
 
-/* MODIFIKASI UTAMA UNTUK INPUT OTOMATIS BERGESER KE KANAN */
+/* PERBAIKAN: Menghapus 'direction: rtl;' dan menyesuaikan scroll */
 .result { 
     font-size: 3.5em; 
     font-weight: 300; 
@@ -116,11 +116,10 @@ body {
     white-space: nowrap; 
     line-height: 1.2; 
     
-    /* 🚀 TRIK UTAMA: Membuat elemen berperilaku Right-to-Left. 
-       Angka terbaru (paling kanan di string) akan ditampilkan di ujung kanan kotak. */
-    direction: rtl; 
+    /* direction: rtl; dihapus agar teks kembali normal */
 }
-/* Memastikan scrollbar pada .result tetap Left-to-Right untuk pengguna yang menggeser */
+
+/* Scrollbar styling tetap dipertahankan jika diperlukan */
 .result::-webkit-scrollbar {
     height: 6px;
 }
