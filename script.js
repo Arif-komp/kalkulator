@@ -80,11 +80,8 @@ function updateDisplay() {
     resultEl.textContent = currentExpression;
     resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '3.5em';
     
-    // ⭐ JIKA MENGGUNAKAN CSS 'direction: rtl', KODE INI HANYA UNTUK KEPASTIAN.
-    // Scroll ke posisi 0 yang, karena RTL, adalah paling kanan.
-    if (resultEl.scrollWidth > resultEl.clientWidth) {
-        resultEl.scrollLeft = 0; 
-    }
+    // ⭐ PERBAIKAN: Menghapus kode scroll karena direction:rtl sudah dihapus, 
+    // dan membiarkan browser menangani overflow default (terpotong di kiri).
 }
 
 function previewCalculation() {
