@@ -46,13 +46,23 @@ function saveHistory() {
 // FUNGSI MATEMATIKA & UTILITY
 // =================================================================
 
+function factorial(n) {
+    if (n < 0) return NaN;
+    if (n === 0) return 1;
+    n = Math.floor(n);
+    let result = 1;
+    for (let i = 2; i <= n; i++) {
+        result *= i;
+    }
+    return result;
+}
+
 function cleanExpression(expression) {
     let cleaned = expression
         .replace(/÷/g, '/')
         .replace(/×/g, '*')
         .replace(/MOD/g, '%')
         .replace(/\^/g, '**')
-        .replace(/%/g, '/100') // <-- LOGIKA UNTUK PERSEN
         .replace(/sin\(/g, 'Math.sin(')
         .replace(/cos\(/g, 'Math.cos(')
         .replace(/tan\(/g, 'Math.tan(')
@@ -60,6 +70,8 @@ function cleanExpression(expression) {
         .replace(/sqrt\(/g, 'Math.sqrt(')
         .replace(/pi/g, 'Math.PI')
         .replace(/e/g, 'Math.E');
+
+    cleaned = cleaned.replace(/(\d+(\.\d+)?)!/g, (match, p1) => `factorial(${p1})`);
     
     return cleaned;
 }
@@ -119,7 +131,6 @@ function calculate() {
         let formattedResult;
         let combinationDetails = null;
 
-        // ... (Logika Pencarian Kombinasi Dibiarkan) ...
         if (isSolvingEquation && calculatedResult % 1 !== 0) {
             
             let X = Math.round(calculatedResult);
@@ -147,7 +158,6 @@ function calculate() {
             formattedResult = String(calculatedResult);
             addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
         }
-        // ... (Akhir Logika Pencarian Kombinasi) ...
 
         historyCurrentEl.textContent = expressionToCalculate + ' =';
         lastResult = calculatedResult;
@@ -185,7 +195,7 @@ function addToHistory(expression, result, combination = null, originalResult = n
 
 function handleButton(value) {
     
-    if (value === 'clear') { // Tombol "C"
+    if (value === 'clear') {
         currentExpression = '0';
         historyCurrentEl.textContent = '';
         lastResult = null;
@@ -195,13 +205,6 @@ function handleButton(value) {
     } else if (value === '=') {
         calculate();
         return;
-    
-    } else if (value === '%') { // Tombol "%"
-        if (/[0-9)]$/.test(currentExpression.slice(-1))) { 
-            currentExpression += '%'; 
-        } else {
-            return;
-        }
 
     } else if (value === 'backspace') {
         if (currentExpression === 'Error') { currentExpression = '0'; } 
@@ -215,8 +218,11 @@ function handleButton(value) {
         previewCalculation();
         return;
 
-    } else if (value === '^2') { 
-          if (/[0-9)]$/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
+    } else if (value === 'fact') {
+          if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '!'; }
+    
+    } else if (value === '^2') { // <--- PENANGANAN BARU UNTUK X²
+          if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
           else if (currentExpression === 'Error' || currentExpression === '0') { currentExpression = '0^2'; }
           else { currentExpression += '0^2'; }
           
@@ -243,6 +249,7 @@ function handleButton(value) {
 // =================================================================
 // LOGIKA RIWAYAT, MENU, DAN SUARA (Tidak Berubah)
 // =================================================================
+// ... (Kode Input Suara, Toggle History, Render History sama seperti sebelumnya) ...
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 if (SpeechRecognition) {
@@ -261,8 +268,7 @@ function processVoiceCommand(command) {
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
     
-    expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(').replace(/pangkat/g, '^').replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(').replace(/logaritma/g, 'log(').replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-').replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/').replace(/modulus|modulo|sisa bagi/g, ' MOD ').replace(/persen/g, '%');
-
+    expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(').replace(/pangkat/g, '^').replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(').replace(/logaritma/g, 'log(').replace(/faktorial/g, '!').replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-').replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/').replace(/modulus|modulo|sisa bagi/g, ' MOD ');
     expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3').replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6').replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9').replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
     if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
@@ -350,3 +356,4 @@ buttons.addEventListener('click', (e) => {
 
 loadHistory(); 
 updateDisplay();
+buatkan agar tampilan inputan user, jika angka yang user input sudah melebihi batas kotak inputannya maka yang inputan terbaru tetap terlihat dan yang lama (sebelah kiri kotak terhiden)
