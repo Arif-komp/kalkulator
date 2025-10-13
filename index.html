@@ -6,7 +6,7 @@
     
     <title>Kalkulator Ilmiah AYIIPP - Expert Mode</title>
     
-    <meta name="description" content="Kalkulator ilmiah modern dengan fungsi expert (logaritma natural, faktorial, permutasi, kombinasi), konversi, geometri, dan pencarian rumus.">
+    <meta name="description" content="Kalkulator ilmiah modern dengan fungsi expert, konversi, geometri, dan pencarian rumus, dilengkapi input suara dan panel kunci.">
     
     <meta name="keywords" content="kalkulator, scientific calculator, kalkulator expert, kalkulator rumus, kalkulator suara, kalkulator konversi">
     
@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <style>
-        /* Baris 14: Variabel CSS untuk Warna dan Ukuran */
+        /* Variabel CSS untuk Warna dan Ukuran */
         :root {
             --primary-color: #00bcd4; /* Cyan */
             --primary-dark: #0097a7;
@@ -24,18 +24,21 @@
             --text-color: #333;
             --operator-color: #ff9800; /* Orange */
             --scientific-color: #5c6bc0; /* Indigo */
+            --expert-color: #3f51b5; /* Biru Tua untuk Expert */
             --history-bg: #f5f7fa;
             --calc-max-width: 400px;
             --padding-base: 20px; 
             --history-width: 300px;
         }
 
-        /* Baris 27: Reset Box Model */
+        /* Reset Box Model */
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        /* Baris 32: Styling Tubuh Dokumen */
+        /* Styling Tubuh Dokumen */
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--background-color);
@@ -43,13 +46,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
-            padding: 0;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent; 
         }
 
-        /* Baris 45: Kontainer Utama Kalkulator */
+        /* Kontainer Utama Kalkulator */
         .main-container {
             position: relative;
             width: 100%;
@@ -59,7 +60,7 @@
             overflow: hidden;
         }
 
-        /* Baris 54: Padding Kalkulator */
+        /* Padding Kalkulator */
         .calculator {
             background-color: var(--card-color);
             padding: var(--padding-base);
@@ -78,6 +79,7 @@
             line-height: 1.1em; 
         }
 
+        /* Tampilan Hasil/Input Utama (Auto-Scroll Kanan) */
         .result { 
             font-size: 3.5em; 
             font-weight: 300; 
@@ -85,8 +87,8 @@
             overflow-x: scroll; 
             white-space: nowrap; 
             line-height: 1.2; 
-            direction: rtl; 
-            text-align: left; 
+            direction: rtl; /* KUNCI 1: Input muncul dari kanan */
+            text-align: left; /* KUNCI 2: Memastikan teks tidak terpotong saat scroll */
         }
 
         .result::first-letter {
@@ -107,6 +109,7 @@
         .buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr); 
+            grid-template-rows: repeat(9, 1fr); /* 9 baris untuk expert */
             gap: 10px; 
         }
 
@@ -133,40 +136,48 @@
         .buttons button[data-value="."]{ grid-column: 1; grid-row: 9; direction: ltr;}
         .buttons button[data-value="="] { grid-column: 4; grid-row: 9; direction: ltr;}
 
-        /* Penambahan 1 baris untuk fungsi expert */
-        .buttons { grid-template-rows: repeat(9, 1fr); }
-
 
         /* GAYA TOMBOL Berdasarkan Kelas */
         .num { background-color: #f0f0f0; color: var(--text-color); } 
         .op, .eq { background-color: var(--operator-color); color: white; font-weight: bold; } 
         .fn { background-color: #e0f7fa; color: var(--primary-dark); font-weight: 600; } 
         .sci { background-color: var(--scientific-color); color: white; font-size: 1em; font-weight: 500; box-shadow: 0 2px 4px rgba(92, 107, 192, 0.4); } 
+        .expert { background-color: var(--expert-color); color: white; font-size: 1em; }
         .eq { background-color: var(--primary-color); font-size: 1.6em; } 
-        .expert { background-color: #3f51b5; color: white; font-size: 1em; } /* Warna baru untuk Expert */
 
-        .buttons button[data-value="^2"] { font-size: 1.1em; }
-        .buttons button[data-value="ln("] { font-size: 1em; }
+        .buttons button[data-value="^2"], .buttons button[data-value="ln("] { font-size: 1em; }
         .buttons button[data-value="!"] { font-size: 1.2em; }
 
 
-        /* --- Header dan Menu --- */
+        /* --- Header dan Panel (Riwayat & Kunci) --- */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; }
+        .header > div { display: flex; gap: 10px; } /* Kontainer untuk tombol kanan (Key & Mic) */
+        
         .burger-menu, .mic-button, .key-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
         .mic-button span.material-icons, .key-button span.material-icons { font-size: 1.6em; }
         .title { color: var(--primary-color); font-size: 1.8em; font-weight: 800; letter-spacing: 2px; margin: 0; }
         
-        /* Riwayat dan Kunci Panel */
+        /* Overlay dan Panel (Riwayat & Kunci) */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         .overlay.active { opacity: 1; visibility: visible; }
-        .panel { position: fixed; top: 0; left: 0; width: var(--history-width); max-width: 80%; height: 100%; background: var(--history-bg); z-index: 1000; box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); transform: translateX(-100%); transition: transform 0.3s; display: flex; flex-direction: column; }
+        
+        .panel { position: fixed; top: 0; width: var(--history-width); max-width: 80%; height: 100%; background: var(--history-bg); z-index: 1000; box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); transition: transform 0.3s; display: flex; flex-direction: column; }
+        
+        /* Riwayat Panel (Kiri) */
+        #historyPanel { left: 0; transform: translateX(-100%); }
+        /* Kunci Panel (Kanan) */
+        #keyPanel { right: 0; left: auto; transform: translateX(100%); }
+        
         .panel.open { transform: translateX(0); }
+
         .panel-header { padding: var(--padding-base); background-color: var(--card-color); border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
         .panel-header h2 { margin: 0; font-size: 1.2em; color: var(--text-color); }
         .panel-header button { background: none; border: none; cursor: pointer; color: #f44336; padding: 5px; }
         .panel-content { padding: var(--padding-base); flex-grow: 1; overflow-y: auto; }
         .history-item, .key-group { padding: 10px; margin-bottom: 10px; background: var(--card-color); border-radius: 8px; cursor: pointer; transition: background 0.2s; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
         .history-item:hover { background: #f0f0f0; }
+        
+        .key-group { cursor: default; } /* Halaman kunci tidak bisa diklik untuk di load */
         .key-group h3 { margin-top: 0; margin-bottom: 5px; color: var(--primary-dark); font-size: 1.1em; }
         .key-group p { margin: 0; font-size: 0.9em; color: #555; line-height: 1.4; }
 
@@ -194,7 +205,7 @@
         </div>
     </div>
     
-    <div class="panel" id="keyPanel" style="left: auto; right: 0; transform: translateX(100%);">
+    <div class="panel" id="keyPanel">
         <div class="panel-header">
             <h2>Kunci Perintah Suara 🗝️</h2>
             <button id="closeKeyPanelBtn" title="Tutup">
@@ -233,8 +244,8 @@
                 
                 <button class="btn expert" data-value="ln(">ln</button>
                 <button class="btn expert" data-value="!">n!</button>
-                <button class="btn expert" data-value="perm(">P(n,r)</button>
-                <button class="btn expert" data-value="comb(">C(n,r)</button>
+                <button class="btn expert" data-value="perm(" title="Permutasi: n, r">P(n,r)</button>
+                <button class="btn expert" data-value="comb(" title="Kombinasi: n, r">C(n,r)</button>
 
                 <button class="btn sci" data-value="sin(">sin</button>
                 <button class="btn sci" data-value="cos(">cos</button>
@@ -279,7 +290,7 @@
     </div>
 
     <script>
-        // Inisialisasi DOM elements
+        // DOM elements
         const resultEl = document.getElementById('result');
         const historyCurrentEl = document.getElementById('history-current');
         const historyListEl = document.getElementById('historyList');
@@ -300,7 +311,7 @@
         let historyRecords = []; 
 
         // ---------------------------------------------------------------------
-        // FUNGSI MATEMATIKA EXPERT TAMBAHAN 🆕
+        // FUNGSI MATEMATIKA EXPERT
         // ---------------------------------------------------------------------
 
         function factorial(n) {
@@ -321,9 +332,8 @@
             return factorial(n) / (factorial(r) * factorial(n - r));
         }
 
-
         // ---------------------------------------------------------------------
-        // DATA DUMMY UNTUK KONVERSI DAN RUMUS 🆕
+        // DATA DUMMY UNTUK KONVERSI DAN RUMUS
         // ---------------------------------------------------------------------
         const currencyRates = {
             usd: 15000, idr: 1, eur: 16000, jpy: 105, aud: 10000 
@@ -350,36 +360,30 @@
         };
 
         // =================================================================
-        // FUNGSI UTILITY DASAR
+        // FUNGSI UTILITY DASAR & EKSEKUSI
         // =================================================================
 
         function cleanExpression(expression) {
-            // Memasukkan fungsi expert ke dalam pembersihan ekspresi
+            // Penggantian operator dasar
             let cleaned = expression
-                .replace(/÷/g, '/')
-                .replace(/×/g, '*')
-                .replace(/MOD/g, '%')
-                .replace(/\^/g, '**')
-                .replace(/%/g, '/100') 
-                .replace(/sin\(/g, 'Math.sin(')
-                .replace(/cos\(/g, 'Math.cos(')
-                .replace(/tan\(/g, 'Math.tan(')
-                .replace(/log\(/g, 'Math.log10(') 
-                .replace(/ln\(/g, 'Math.log(') // Natural Logarithm
-                .replace(/sqrt\(/g, 'Math.sqrt(')
-                .replace(/pi/g, 'Math.PI')
-                .replace(/e/g, 'Math.E')
+                .replace(/÷/g, '/').replace(/×/g, '*')
+                .replace(/MOD/g, '%').replace(/\^/g, '**')
+                .replace(/%/g, '/100'); 
+            
+            // Penggantian fungsi Math JS
+            cleaned = cleaned
+                .replace(/sin\(/g, 'Math.sin(').replace(/cos\(/g, 'Math.cos(')
+                .replace(/tan\(/g, 'Math.tan(').replace(/log\(/g, 'Math.log10(') 
+                .replace(/ln\(/g, 'Math.log(').replace(/sqrt\(/g, 'Math.sqrt(')
+                .replace(/pi/g, 'Math.PI').replace(/e/g, 'Math.E')
                 .replace(/\*\*2/g, '**2'); 
             
-            // Penanganan Faktorial (harus dilakukan terakhir agar tidak bentrok dengan Perm/Comb)
+            // Penanganan Faktorial, Permutasi, Kombinasi
             cleaned = cleaned.replace(/(\d+)\!/g, 'factorial($1)');
-            
-            // Penanganan Permutasi/Kombinasi
             cleaned = cleaned.replace(/perm\(([^,]+),\s*([^)]+)\)/g, 'permutation($1, $2)');
             cleaned = cleaned.replace(/comb\(([^,]+),\s*([^)]+)\)/g, 'combination($1, $2)');
 
-
-            // Menambahkan definisi fungsi custom agar 'eval' (New Function) bisa memanggilnya
+            // Definisikan fungsi custom agar dieksekusi oleh 'new Function()'
             const functionDefinitions = `
                 const factorial = ${factorial.toString()};
                 const permutation = ${permutation.toString()};
@@ -391,6 +395,7 @@
 
         function updateDisplay() {
             resultEl.textContent = currentExpression;
+            // Penyesuaian font dan arah untuk auto-scroll
             if (currentExpression.length > 15) {
                 resultEl.style.fontSize = '2em';
                 resultEl.style.direction = 'rtl';
@@ -400,7 +405,7 @@
                 resultEl.style.direction = 'ltr'; 
                 resultEl.style.textAlign = 'right';
             }
-            resultEl.scrollLeft = 0;
+            resultEl.scrollLeft = 0; // Kunci: scroll ke kanan penuh
         }
 
         function calculate() {
@@ -408,7 +413,7 @@
             if (expressionToCalculate === '0' || expressionToCalculate === 'Error') return;
 
             try {
-                // Gunakan new Function untuk eksekusi kode dengan fungsi custom
+                // Eksekusi kode dengan fungsi custom
                 const executableCode = cleanExpression(expressionToCalculate);
                 let calculatedResult = (new Function(executableCode))();
                 
@@ -432,14 +437,12 @@
                 console.error("Calculation Error:", error);
             }
         }
-
-        // ... (Fungsi loadHistory, saveHistory, addToHistory, handleButton, previewCalculation tetap sama) ...
+        
+        // ... (Fungsi Persistensi dan Handler Tombol dipersingkat di sini, tapi lengkap di kode)
         function loadHistory() {
             const storedHistory = localStorage.getItem('calculatorHistory');
             if (storedHistory) {
-                try {
-                    historyRecords = JSON.parse(storedHistory);
-                } catch (e) { historyRecords = []; }
+                try { historyRecords = JSON.parse(storedHistory); } catch (e) { historyRecords = []; }
             }
             renderHistory();
         }
@@ -457,16 +460,11 @@
                 renderHistory();
             }
         }
+        
         function previewCalculation() {
             let expressionToCalculate = currentExpression;
-
-            if (expressionToCalculate === '0' || expressionToCalculate === 'Error') {
-                historyCurrentEl.textContent = '';
-                return;
-            }
-            
-            if (/[+\-×÷ MOD\^()]$/.test(expressionToCalculate.slice(-1))) {
-                historyCurrentEl.textContent = expressionToCalculate + '...';
+            if (expressionToCalculate === '0' || expressionToCalculate === 'Error' || /[+\-×÷ MOD\^()]$/.test(expressionToCalculate.slice(-1))) {
+                historyCurrentEl.textContent = expressionToCalculate === '0' || expressionToCalculate === 'Error' ? '' : expressionToCalculate + '...';
                 return;
             }
 
@@ -474,23 +472,19 @@
                 const executableCode = cleanExpression(expressionToCalculate);
                 let calculatedResult = (new Function(executableCode))();
                 
-                if (!isFinite(calculatedResult)) {
-                    historyCurrentEl.textContent = 'Invalid Input';
-                    return;
-                }
+                if (!isFinite(calculatedResult)) { historyCurrentEl.textContent = 'Invalid Input'; return; }
 
                 calculatedResult = parseFloat(calculatedResult.toFixed(10)); 
                 let formattedResult = String(calculatedResult);
-                
                 historyCurrentEl.textContent = ' = ' + formattedResult;
 
             } catch (error) {
                 historyCurrentEl.textContent = expressionToCalculate + '...'; 
             }
         }
+        
         function handleButton(value) {
-            
-            if (value === 'clear') { currentExpression = '0'; historyCurrentEl.textContent = ''; lastResult = null; updateDisplay(); return; } 
+            if (value === 'clear') { currentExpression = '0'; historyCurrentEl.textContent = ''; lastResult = null; } 
             else if (value === '=') { calculate(); return; }
             else if (value === '%') { if (/[0-9)]$/.test(currentExpression.slice(-1))) { currentExpression += '%'; } else { return; } } 
             else if (value === '!') { if (/[0-9)]$/.test(currentExpression.slice(-1))) { currentExpression += '!'; } else { return; } }
@@ -502,20 +496,20 @@
                     if (currentExpression.endsWith(' MOD ')) { currentExpression = currentExpression.slice(0, -5); }
                     if (currentExpression.length === 0) { currentExpression = '0'; }
                 }
-                currentExpression = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
-                updateDisplay();
-                previewCalculation();
-                return;
             } 
             else if (value === '^2') {
                   if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
-                  else if (currentExpression === 'Error') { currentExpression = '0^2'; }
                   else if (currentExpression === '0' && /[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
                   else if (currentExpression === '0') { return; }
                   else { currentExpression += '^2'; } 
-            } else {
+            } 
+            else if (value === 'perm(' || value === 'comb(') {
+                // Untuk Permutasi/Kombinasi, tambahkan operator dan kurung buka
+                if (currentExpression === '0' || lastResult !== null) { currentExpression = value; lastResult = null; }
+                else { currentExpression += value; }
+            }
+            else {
                 const isOperator = /[+\-×÷ MOD()^%]/.test(value) || value.includes('(');
-                
                 if (lastResult !== null && lastResult !== undefined) {
                     if (isOperator) { currentExpression = String(lastResult) + value; } 
                     else { currentExpression = value; }
@@ -553,7 +547,7 @@
             historyCurrentEl.textContent = 'Perintah Suara: ' + command;
             let expression = command;
             
-            // FASE 1: PENANGANAN PERMINTAAN RUMUS 🆕
+            // FASE 1: PENANGANAN PERINTAH KHUSUS (RUMUS, CLEAR)
             const formulaMatch = command.match(/rumus\s+(.+)/i);
             if (formulaMatch) {
                 const query = formulaMatch[1].trim();
@@ -567,32 +561,27 @@
                 updateDisplay();
                 return;
             }
+            if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
 
-            // FASE 2: Penggantian Kata Kunci ke Simbol
+            // FASE 2: Penggantian Kata Kunci Matematika ke Simbol/Fungsi
             expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(')
                 .replace(/pangkat/g, '^')
-                .replace(/sinus/g, 'sin(')
-                .replace(/kosinus/g, 'cos(')
-                .replace(/tangen/g, 'tan(')
-                .replace(/logaritma natural/g, 'ln(') 
-                .replace(/logaritma/g, 'log(')
+                .replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(')
+                .replace(/logaritma natural/g, 'ln(').replace(/logaritma/g, 'log(')
                 .replace(/faktorial/g, '!') 
-                .replace(/permutasi/g, 'perm') 
-                .replace(/kombinasi/g, 'comb') 
+                .replace(/permutasi/g, 'perm').replace(/kombinasi/g, 'comb')
                 .replace(/persen/g, '%')
-                .replace(/tambah|plus/g, '+')
-                .replace(/kurang|minus|kurangi/g, '-')
-                .replace(/kali|dikali|perkalian|x/g, '*')
-                .replace(/bagi|dibagi|per/g, '/')
+                .replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-')
+                .replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/')
                 .replace(/modulus|modulo|sisa bagi/g, ' MOD ');
                 
+            // Penggantian Angka
             expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3').replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6').replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9').replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
-            if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
             
             // FASE 3: Logika Khusus (KONVERSI, GEOMETRI, PERSEN)
             
-            // 1. LOGIKA KONVERSI MATA UANG
+            // 1. KONVERSI MATA UANG
             const currencyMatch = command.match(/(\d+(\.\d+)?)\s*(usd|dolar|euro|eur|rupiah|idr|yen|jpy|aud)\s+(ke|jadi)\s*(usd|dolar|euro|eur|rupiah|idr|yen|jpy|aud)/i);
             if (currencyMatch) {
                 const value = parseFloat(currencyMatch[1]);
@@ -605,7 +594,7 @@
                 updateDisplay(); calculate(); return;
             }
 
-            // 2. LOGIKA PERHITUNGAN GEOMETRI
+            // 2. PERHITUNGAN GEOMETRI (Volume & Luas)
             const volumeMatch = command.match(/panjang\s*(\d+(\.\d+)?)\s*kali\s*lebar\s*(\d+(\.\d+)?)\s*kali\s*tinggi\s*(\d+(\.\d+)?)/i);
             if (volumeMatch) {
                 const p = volumeMatch[1]; const l = volumeMatch[3]; const t = volumeMatch[5];
@@ -621,7 +610,7 @@
                 updateDisplay(); calculate(); return;
             }
 
-            // 3. LOGIKA PERSEN
+            // 3. PERHITUNGAN PERSEN
             const percentOfMatch = command.match(/(\d+(\.\d+)?)\s*persen\s+dari\s*(\d+(\.\d+)?)/i); 
             if (percentOfMatch) {
                 let percentValue = percentOfMatch[1]; let baseValue = percentOfMatch[3];
@@ -637,7 +626,7 @@
                 updateDisplay(); calculate(); return;
             }
 
-            // FASE 4: Eksekusi Ekspresi Fleksibel (A ke B + C)
+            // FASE 4: Eksekusi Ekspresi Fleksibel
             let cleanSpeech = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
             cleanSpeech = cleanSpeech
                 .replace(/ ke /g, ' ').replace(/ jadi /g, ' ').replace(/ buat /g, ' ')
@@ -661,15 +650,13 @@
             if (isOpen) { 
                 panelEl.classList.add('open'); 
                 overlay.classList.add('active'); 
-                // Tutup panel lain jika ada
-                if (panelEl.id === 'historyPanel' && keyPanel.classList.contains('open')) {
-                    keyPanel.classList.remove('open');
-                } else if (panelEl.id === 'keyPanel' && historyPanel.classList.contains('open')) {
-                    historyPanel.classList.remove('open');
+                // Tutup panel lain jika membuka panel baru
+                const otherPanel = (panelEl.id === 'historyPanel') ? keyPanel : historyPanel;
+                if (otherPanel.classList.contains('open')) {
+                    otherPanel.classList.remove('open');
                 }
             } else { 
                 panelEl.classList.remove('open'); 
-                // Cek apakah panel lain juga tertutup
                 if (!historyPanel.classList.contains('open') && !keyPanel.classList.contains('open')) {
                     overlay.classList.remove('active');
                 }
@@ -677,12 +664,10 @@
         }
 
         burgerMenuBtn.addEventListener('click', () => {
-            const isCurrentlyOpen = historyPanel.classList.contains('open');
-            togglePanel(historyPanel, !isCurrentlyOpen);
+            togglePanel(historyPanel, !historyPanel.classList.contains('open'));
         });
         keyBtn.addEventListener('click', () => {
-            const isCurrentlyOpen = keyPanel.classList.contains('open');
-            togglePanel(keyPanel, !isCurrentlyOpen);
+            togglePanel(keyPanel, !keyPanel.classList.contains('open'));
         });
         closeKeyPanelBtn.addEventListener('click', () => { togglePanel(keyPanel, false); });
         overlay.addEventListener('click', () => { 
@@ -714,24 +699,23 @@
             renderHistory();
         });
 
-        // =================================================================
-        // KONTEN HALAMAN KUNCI 🆕
-        // =================================================================
+        // KONTEN HALAMAN KUNCI
         function renderKeyList() {
             const keys = [
-                { title: 'Perhitungan Dasar/Fleksibel', content: 'Gunakan **ke**, **jadi**, atau **buat** untuk menyambung ekspresi. Contoh: "sepuluh ke lima kali tiga".' },
-                { title: 'Fungsi Expert & Ilmiah', content: 'sinus [angka], kosinus [angka], tangen [angka], logaritma [angka] ($\log_{10}$), logaritma natural [angka] ($\ln$), [angka] faktorial ([angka]!), permutasi [n] koma [r] ($\text{perm}$), kombinasi [n] koma [r] ($\text{comb}$).' },
+                { title: 'Perhitungan Dasar', content: 'Gunakan **ke**, **jadi**, atau **buat** untuk menyambung ekspresi. Contoh: "lima puluh ke tiga kali dua".' },
+                { title: 'Fungsi Expert & Ilmiah', content: 'sinus [A], kosinus [A], tangen [A], logaritma [A] ($\log_{10}$), **logaritma natural [A] ($\ln$)**, **[A] faktorial** ([A]!), **permutasi [n] koma [r]**, **kombinasi [n] koma [r]**.' },
                 { title: 'Perhitungan Geometri', content: 'Luas: **panjang [A] kali lebar [B]**. Volume: **panjang [A] kali lebar [B] kali tinggi [C]**.' },
                 { title: 'Konversi Mata Uang (Placeholder)', content: 'Gunakan **[nilai] [mata uang A] ke [mata uang B]**. Mata uang yang didukung: **dolar (USD), rupiah (IDR), euro (EUR), yen (JPY)**.' },
                 { title: 'Perhitungan Persen', content: 'Nilai: **[X] persen dari [Y]**. Rasio: **[X] dari [Y] persen**.' },
-                { title: 'Pencarian Rumus 📚', content: 'Katakan: **rumus [nama rumus]**. Contoh: "rumus volume balok", "rumus pythagoras", "rumus luas lingkaran".' }
+                { title: 'Pencarian Rumus 📚', content: 'Katakan: **rumus [nama rumus]**. Contoh: "rumus volume balok", "rumus pythagoras", "rumus luas lingkaran".' },
+                { title: 'Perintah Lain', content: '**hapus** atau **clear** untuk menghapus tampilan.' }
             ];
 
             keyListEl.innerHTML = '';
             keys.forEach(key => {
                 const group = document.createElement('div');
                 group.classList.add('key-group');
-                group.innerHTML = `<h3>${key.title}</h3><p>${key.content}</p>`;
+                group.innerHTML = `<h3>${key.title}</h3><p>${key.content.replace(/\*\*/g, '<b>').replace(/\*\*/g, '</b>')}</p>`;
                 keyListEl.appendChild(group);
             });
         }
@@ -750,7 +734,7 @@
         });
 
         loadHistory();
-        renderKeyList(); // Inisialisasi daftar kunci
+        renderKeyList(); 
         updateDisplay(); 
     </script>
 </body>
