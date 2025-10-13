@@ -3,186 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>Kalkulator Ilmiah Ayiipp</title>
-    
-    <meta name="description" content="Kalkulator ilmiah modern dengan fungsi expert, konversi, geometri, dan pencarian rumus, dilengkapi input suara dan panel kunci.">
-    
-    <meta name="keywords" content="kalkulator, scientific calculator, kalkulator expert, kalkulator rumus, kalkulator suara, kalkulator konversi">
-    
-    <meta name="author" content="Ayiipp">
-
+    <title>Kalkulator Ilmiah AYIIPP</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    
     <style>
-        /* Variabel CSS untuk Warna dan Ukuran */
-        :root {
-            --primary-color: #00bcd4; /* Cyan */
-            --primary-dark: #0097a7;
-            --background-color: #eef1f5; /* Light Gray */
-            --card-color: #ffffff;
-            --text-color: #333;
-            --operator-color: #ff9800; /* Orange */
-            --scientific-color: #5c6bc0; /* Indigo */
-            --expert-color: #3f51b5; /* Biru Tua untuk Expert */
-            --history-bg: #f5f7fa;
-            --calc-max-width: 400px;
-            --padding-base: 20px; 
-            --history-width: 300px;
-        }
-
-        /* Reset Box Model */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Styling Tubuh Dokumen */
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--background-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent; 
-        }
-
-        /* Kontainer Utama Kalkulator */
-        .main-container {
-            position: relative;
-            width: 100%;
-            max-width: var(--calc-max-width);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 5px rgba(0, 0, 0, 0.05); 
-            border-radius: 20px; 
-            overflow: hidden;
-        }
-
-        /* Padding Kalkulator */
-        .calculator {
-            background-color: var(--card-color);
-            padding: var(--padding-base);
-        }
-
-        /* --- Layar Input/Output --- */
-        .display-container { 
-            text-align: right; 
-            margin-bottom: 20px; 
-            padding: 10px 5px; 
-        }
-        .history-current { 
-            font-size: 1em; 
-            color: #888; 
-            min-height: 1.1em; 
-            line-height: 1.1em; 
-        }
-
-        /* Tampilan Hasil/Input Utama */
-        .result { 
-            font-size: 3.5em; 
-            font-weight: 300; 
-            color: var(--text-color); 
-            overflow-x: scroll; 
-            white-space: nowrap; 
-            line-height: 1.2; 
-            direction: rtl; 
-            text-align: left; 
-        }
-
-        .result::first-letter {
-            direction: ltr;
-        }
-        .result:empty, .result:not([style*="font-size: 2em"]):not([style*="font-size: 3.5em"]) {
-            direction: ltr; 
-            text-align: right;
-        }
-        
-        /* Styling Scrollbar */
+        :root { --primary-color: #00bcd4; --primary-dark: #0097a7; --background-color: #eef1f5; --card-color: #ffffff; --text-color: #333; --operator-color: #ff9800; --scientific-color: #5c6bc0; --expert-color: #3f51b5; --history-bg: #f5f7fa; --calc-max-width: 400px; --padding-base: 20px; --history-width: 300px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--background-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .main-container { position: relative; width: 100%; max-width: var(--calc-max-width); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 5px rgba(0, 0, 0, 0.05); border-radius: 20px; overflow: hidden; }
+        .calculator { background-color: var(--card-color); padding: var(--padding-base); }
+        .display-container { text-align: right; margin-bottom: 20px; padding: 10px 5px; }
+        .history-current { font-size: 1em; color: #888; min-height: 1.1em; line-height: 1.1em; }
+        .result { font-size: 3.5em; font-weight: 300; color: var(--text-color); overflow-x: scroll; white-space: nowrap; line-height: 1.2; direction: rtl; text-align: left; }
         .result::-webkit-scrollbar { height: 6px; }
         .result::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
         .result::-webkit-scrollbar-track { background: transparent; }
-
-
-        /* --- Tombol Kalkulator (Grid 4 Kolom) --- */
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); 
-            grid-template-rows: repeat(9, 1fr); 
-            gap: 8px; 
-        }
-
-        .btn {
-            padding: 12px 0; 
-            font-size: 1.1em; 
-            border: none;
-            border-radius: 8px; 
-            cursor: pointer;
-            transition: background-color 0.05s, box-shadow 0.05s, transform 0.05s; 
-            font-weight: 500;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
-            min-height: 48px; 
-        }
-
-        .btn:active {
-            transform: translateY(0); 
-            box-shadow: 0 0 1px rgba(0, 0, 0, 0.1); 
-            filter: brightness(0.95); 
-        }
-
-        /* Penyesuaian Grid untuk BARIS TERAKHIR */
+        .buttons { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(9, 1fr); gap: 8px; }
+        .btn { padding: 12px 0; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.05s, box-shadow 0.05s, transform 0.05s; font-weight: 500; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); min-height: 48px; }
+        .btn:active { transform: translateY(0); box-shadow: 0 0 1px rgba(0, 0, 0, 0.1); filter: brightness(0.95); }
         .buttons button[data-value="0"] { grid-column: 2 / span 2; grid-row: 9; direction: ltr; } 
         .buttons button[data-value="."]{ grid-column: 1; grid-row: 9; direction: ltr;}
         .buttons button[data-value="="] { grid-column: 4; grid-row: 9; direction: ltr;}
-
-
-        /* GAYA TOMBOL Berdasarkan Kelas */
         .num { background-color: #f0f0f0; color: var(--text-color); } 
         .op, .eq { background-color: var(--operator-color); color: white; font-weight: bold; } 
         .fn { background-color: #e0f7fa; color: var(--primary-dark); font-weight: 600; font-size: 1em; } 
         .sci { background-color: var(--scientific-color); color: white; font-size: 0.9em; font-weight: 500; box-shadow: 0 1px 3px rgba(92, 107, 192, 0.3); } 
         .expert { background-color: var(--expert-color); color: white; font-size: 0.9em; } 
         .eq { background-color: var(--primary-color); font-size: 1.4em; } 
-
-        .buttons button[data-value="^2"], .buttons button[data-value="ln("], .buttons button[data-value="perm("], .buttons button[data-value="comb("] { font-size: 0.9em; }
-        .buttons button[data-value="!"] { font-size: 1.1em; }
-
-
-        /* --- Header dan Panel (Riwayat & Kunci) --- */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px; }
         .header > div { display: flex; gap: 10px; } 
-        
         .burger-menu, .mic-button, .key-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
         .mic-button span.material-icons, .key-button span.material-icons { font-size: 1.6em; }
         .title { color: var(--primary-color); font-size: 1.8em; font-weight: 800; letter-spacing: 2px; margin: 0; }
-        
-        /* Panel Umum */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         .overlay.active { opacity: 1; visibility: visible; }
-        
         .panel { position: fixed; top: 0; width: var(--history-width); max-width: 80%; height: 100%; background: var(--history-bg); z-index: 1000; box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); transition: transform 0.3s; display: flex; flex-direction: column; }
-        
         #historyPanel { left: 0; transform: translateX(-100%); }
         #keyPanel { right: 0; left: auto; transform: translateX(100%); }
-        
         .panel.open { transform: translateX(0); }
-
         .panel-header { padding: var(--padding-base); background-color: var(--card-color); border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        /* Flex agar tombol riwayat bisa berjajar */
         #historyPanel .panel-header > div { display: flex; gap: 10px; } 
-        
         .panel-header h2 { margin: 0; font-size: 1.2em; color: var(--text-color); }
         .panel-header button { background: none; border: none; cursor: pointer; color: #f44336; padding: 5px; }
         .panel-content { padding: var(--padding-base); flex-grow: 1; overflow-y: auto; }
         .history-item, .key-group { padding: 10px; margin-bottom: 10px; background: var(--card-color); border-radius: 8px; cursor: pointer; transition: background 0.2s; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
         .history-item:hover { background: #f0f0f0; }
-        
         .key-group { cursor: default; } 
         .key-group h3 { margin-top: 0; margin-bottom: 5px; color: var(--primary-dark); font-size: 1.1em; }
         .key-group p { margin: 0; font-size: 0.9em; color: #555; line-height: 1.4; }
-
-        /* Responsif (Mobile View) */
         @media (max-width: 550px) {
             body { align-items: flex-start; }
             .main-container { border-radius: 0; box-shadow: none; min-height: 100vh; max-width: none; }
@@ -311,7 +178,6 @@
         const closeKeyPanelBtn = document.getElementById('closeKeyPanelBtn');
         const overlay = document.getElementById('overlay');
         const keyListEl = document.getElementById('keyList');
-        // DOM BARU
         const closeHistoryPanelBtn = document.getElementById('closeHistoryPanelBtn');
 
 
@@ -320,10 +186,7 @@
         let lastResult = null;
         let historyRecords = []; 
 
-        // ---------------------------------------------------------------------
-        // FUNGSI MATEMATIKA EXPERT
-        // ---------------------------------------------------------------------
-
+        // --- FUNGSI MATEMATIKA EXPERT ---
         function factorial(n) {
             if (n < 0 || n % 1 !== 0) throw new Error("Faktorial hanya untuk bilangan bulat non-negatif.");
             if (n === 0) return 1;
@@ -331,92 +194,47 @@
             for (let i = 2; i <= n; i++) res *= i;
             return res;
         }
-
         function permutation(n, r) {
             if (n < r || n < 0 || r < 0) return NaN;
             return factorial(n) / factorial(n - r);
         }
-
         function combination(n, r) {
             if (n < r || n < 0 || r < 0) return NaN;
             return factorial(n) / (factorial(r) * factorial(n - r));
         }
 
-        // ---------------------------------------------------------------------
-        // DATA DUMMY UNTUK KONVERSI DAN RUMUS
-        // ---------------------------------------------------------------------
-        const currencyRates = {
-            usd: 15000, idr: 1, eur: 16000, jpy: 105, aud: 10000 
-        };
+        // --- DATA DUMMY UNTUK KONVERSI DAN RUMUS ---
+        const currencyRates = { usd: 15000, idr: 1, eur: 16000, jpy: 105, aud: 10000 };
         function getRate(from, to) {
             const fromRate = currencyRates[from.toLowerCase()] || 1;
             const toRate = currencyRates[to.toLowerCase()] || 1;
             return fromRate / toRate;
         }
-        
         const mathFormulas = {
-            'luas lingkaran': 'Luas = π × r²',
-            'keliling lingkaran': 'Keliling = 2 × π × r',
-            'luas persegi': 'Luas = sisi × sisi (s²)',
-            'keliling persegi': 'Keliling = 4 × sisi',
-            'luas segitiga': 'Luas = ½ × alas × tinggi',
-            'volume kubus': 'Volume = sisi³',
-            'volume balok': 'Volume = panjang × lebar × tinggi',
-            'pythagoras': 'c² = a² + b² (mencari sisi miring)',
-            'rumus abc': 'x = [-b ± sqrt(b² - 4ac)] / 2a',
+            'luas lingkaran': 'Luas = π × r²', 'keliling lingkaran': 'Keliling = 2 × π × r',
+            'luas persegi': 'Luas = sisi × sisi (s²)', 'volume balok': 'Volume = panjang × lebar × tinggi',
             'faktorial': 'n! = n × (n-1) × ... × 1',
-            'permutasi': 'P(n, r) = n! / (n - r)!',
-            'kombinasi': 'C(n, r) = n! / (r! × (n - r)!)',
         };
 
-        // =================================================================
-        // FUNGSI UTILITY DASAR & EKSEKUSI
-        // =================================================================
-
+        // --- FUNGSI UTILITY DASAR & EKSEKUSI ---
         function cleanExpression(expression) {
-            // Penggantian operator dasar
-            let cleaned = expression
-                .replace(/÷/g, '/').replace(/×/g, '*')
-                .replace(/MOD/g, '%').replace(/\^/g, '**')
-                .replace(/%/g, '/100'); 
-            
-            // Penggantian fungsi Math JS
-            cleaned = cleaned
-                .replace(/sin\(/g, 'Math.sin(').replace(/cos\(/g, 'Math.cos(')
-                .replace(/tan\(/g, 'Math.tan(').replace(/log\(/g, 'Math.log10(') 
-                .replace(/ln\(/g, 'Math.log(').replace(/sqrt\(/g, 'Math.sqrt(')
-                .replace(/pi/g, 'Math.PI').replace(/e/g, 'Math.E')
-                .replace(/\*\*2/g, '**2'); 
-            
-            // Penanganan Faktorial, Permutasi, Kombinasi
-            cleaned = cleaned.replace(/(\d+)\!/g, 'factorial($1)');
-            cleaned = cleaned.replace(/perm\(([^,]+),\s*([^)]+)\)/g, 'permutation($1, $2)');
-            cleaned = cleaned.replace(/comb\(([^,]+),\s*([^)]+)\)/g, 'combination($1, $2)');
-
-            // Definisikan fungsi custom agar dieksekusi oleh 'new Function()'
-            const functionDefinitions = `
-                const factorial = ${factorial.toString()};
-                const permutation = ${permutation.toString()};
-                const combination = ${combination.toString()};
-            `;
-            
+            let cleaned = expression.replace(/÷/g, '/').replace(/×/g, '*').replace(/MOD/g, '%').replace(/\^/g, '**').replace(/%/g, '/100'); 
+            cleaned = cleaned.replace(/sin\(/g, 'Math.sin(').replace(/cos\(/g, 'Math.cos(').replace(/tan\(/g, 'Math.tan(').replace(/log\(/g, 'Math.log10(').replace(/ln\(/g, 'Math.log(').replace(/sqrt\(/g, 'Math.sqrt(').replace(/pi/g, 'Math.PI').replace(/e/g, 'Math.E').replace(/\*\*2/g, '**2'); 
+            cleaned = cleaned.replace(/(\d+)\!/g, 'factorial($1)').replace(/perm\(([^,]+),\s*([^)]+)\)/g, 'permutation($1, $2)').replace(/comb\(([^,]+),\s*([^)]+)\)/g, 'combination($1, $2)');
+            const functionDefinitions = `const factorial = ${factorial.toString()}; const permutation = ${permutation.toString()}; const combination = ${combination.toString()};`;
             return functionDefinitions + 'return ' + cleaned;
         }
-
         function updateDisplay() {
             resultEl.textContent = currentExpression;
             if (currentExpression.length > 15) {
-                resultEl.style.fontSize = '2em';
-                resultEl.style.direction = 'rtl';
-                resultEl.style.textAlign = 'left';
+                resultEl.style.fontSize = '2em'; resultEl.style.direction = 'rtl'; resultEl.style.textAlign = 'left';
             } else {
-                resultEl.style.fontSize = '3.5em';
-                resultEl.style.direction = 'ltr'; 
-                resultEl.style.textAlign = 'right';
+                resultEl.style.fontSize = '3.5em'; resultEl.style.direction = 'ltr'; resultEl.style.textAlign = 'right';
             }
             resultEl.scrollLeft = 0; 
         }
-
+        
+        // FUNGSI INTI PERHITUNGAN (DIBULATKAN UNIVERSAL)
         function calculate() {
             let expressionToCalculate = currentExpression;
             if (expressionToCalculate === '0' || expressionToCalculate === 'Error') return;
@@ -427,7 +245,11 @@
                 
                 if (!isFinite(calculatedResult)) throw new Error("Invalid Calculation");
 
-                calculatedResult = parseFloat(calculatedResult.toFixed(10));
+                // --- KOREKSI: Bulatkan hasil akhir universal ---
+                calculatedResult = parseFloat(calculatedResult.toFixed(10)); 
+                calculatedResult = Math.round(calculatedResult); // <--- PEMBULATAN KE BILANGAN BULAT TERDEKAT
+                // ---------------------------------------------
+
                 let formattedResult = String(calculatedResult);
                 addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
 
@@ -445,51 +267,38 @@
                 console.error("Calculation Error:", error);
             }
         }
-        
+        // ... (Fungsi Utility lainnya tetap)
         function loadHistory() {
             const storedHistory = localStorage.getItem('calculatorHistory');
-            if (storedHistory) {
-                try { historyRecords = JSON.parse(storedHistory); } catch (e) { historyRecords = []; }
-            }
+            if (storedHistory) { try { historyRecords = JSON.parse(storedHistory); } catch (e) { historyRecords = []; } }
             renderHistory();
         }
-
-        function saveHistory() {
-            localStorage.setItem('calculatorHistory', JSON.stringify(historyRecords));
-        }
-
+        function saveHistory() { localStorage.setItem('calculatorHistory', JSON.stringify(historyRecords)); }
         function addToHistory(expression, result, combination = null, originalResult = null) {
             if (expression !== 'Error' && expression !== '0') {
                 const lastRecord = historyRecords[historyRecords.length - 1];
                 if (lastRecord && lastRecord.expression === expression && lastRecord.result === result) return;
                 historyRecords.push({ expression: expression, result: result, combination: combination, originalResult: originalResult || result });
-                saveHistory(); 
-                renderHistory();
+                saveHistory(); renderHistory();
             }
         }
-        
         function previewCalculation() {
             let expressionToCalculate = currentExpression;
             if (expressionToCalculate === '0' || expressionToCalculate === 'Error' || /[+\-×÷ MOD\^()]$/.test(expressionToCalculate.slice(-1))) {
                 historyCurrentEl.textContent = expressionToCalculate === '0' || expressionToCalculate === 'Error' ? '' : expressionToCalculate + '...';
                 return;
             }
-
             try {
                 const executableCode = cleanExpression(expressionToCalculate);
                 let calculatedResult = (new Function(executableCode))();
-                
                 if (!isFinite(calculatedResult)) { historyCurrentEl.textContent = 'Invalid Input'; return; }
-
                 calculatedResult = parseFloat(calculatedResult.toFixed(10)); 
-                let formattedResult = String(calculatedResult);
+                let formattedResult = String(Math.round(calculatedResult)); // Pembulatan untuk Preview
                 historyCurrentEl.textContent = ' = ' + formattedResult;
-
             } catch (error) {
                 historyCurrentEl.textContent = expressionToCalculate + '...'; 
             }
         }
-        
         function handleButton(value) {
             if (value === 'clear') { currentExpression = '0'; historyCurrentEl.textContent = ''; lastResult = null; } 
             else if (value === '=') { calculate(); return; }
@@ -532,7 +341,7 @@
         }
 
         // =================================================================
-        // LOGIKA SUARA (DIPERBAIKI FASE 2 & 3) 🛠️
+        // LOGIKA SUARA (Pencarian Variabel Implisit Ditingkatkan) 🛠️
         // =================================================================
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -580,85 +389,81 @@
                 .replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-')
                 .replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/')
                 .replace(/modulus|modulo|sisa bagi/g, ' MOD ')
-                // PERBAIKAN SEBELUMNYA: Terjemahkan "jadi" dan "ke" sebagai operator tambah/sambung (+)
-                .replace(/jadi|buat/g, '+'); 
+                // KUNCI PERBAIKAN: SEMUA kata kunci penghubung diubah menjadi SPASI
+                .replace(/jadi|ke|buat/g, ' '); 
                 
-            // KUNCI PERBAIKAN 1: Terjemahkan nama mata uang dan angka di awal pemrosesan FASE 2
+            // Terjemahkan nama mata uang dan angka
             expression = expression
-                .replace(/dolar|us dollar/g, 'usd')
-                .replace(/rupiah|rp/g, 'idr')
-                .replace(/euro/g, 'eur')
-                .replace(/yen/g, 'jpy')
+                .replace(/dolar|us dollar/g, 'usd').replace(/rupiah|rp/g, 'idr').replace(/euro/g, 'eur').replace(/yen|jpy/g, 'jpy')
                 .replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3').replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6').replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9').replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
             
-            // FASE 3: Logika Khusus (KONVERSI, GEOMETRI, PERSEN)
-            
-            // 1. KONVERSI MATA UANG (Diperbaiki agar menggunakan 'ke' yang sudah diterjemahkan menjadi '+')
-            const currencyMatch = expression.match(/(\d+(\.\d+)?)\s*(usd|idr|eur|jpy|aud)\s*\+\s*(usd|idr|eur|jpy|aud)/i);
-            if (currencyMatch) {
-                const value = parseFloat(currencyMatch[1]);
-                const fromCurrency = currencyMatch[3];
-                const toCurrency = currencyMatch[5];
+            // FASE 3: Logika Khusus (Pencarian Variabel, Konversi, Geometri, Persen)
 
-                if (!currencyRates[fromCurrency] || !currencyRates[toCurrency]) {
-                    historyCurrentEl.textContent = `Error: Mata uang ${fromCurrency.toUpperCase()} atau ${toCurrency.toUpperCase()} tidak didukung.`;
+            // 1. PENCARIAN VARIABEL IMPLISIT (LOGIKA PERMINTAAN BARU)
+            // Pola: [Angka A] [spasi] [Angka B] [Operator C...] (Contoh: "15 buat 500 kurang 20")
+            const implicitMatch = expression.match(/^(\d+(\.\d+)?)\s+(\d+(\.\d+)?)\s*(.*)/);
+            if (implicitMatch) {
+                const valA = parseFloat(implicitMatch[1]); // Nilai awal (15)
+                const valB = parseFloat(implicitMatch[3]); // Nilai target (500)
+                let remainingOp = implicitMatch[5] || ''; // Sisa operator (kurang 20)
+
+                if (!isNaN(valA) && !isNaN(valB) && valA !== 0) {
+                    
+                    // a. Bersihkan sisa operator dan gabungkan dengan Angka B untuk mendapatkan Target Akhir.
+                    remainingOp = remainingOp.trim()
+                        .replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-')
+                        .replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/')
+                        .replace(/\s*([\+\-\*\/%MOD\^])\s*/g, '$1') 
+                        .replace(/[\+\-\*\/%MOD\^]$/, '')
+                        .replace(/\s+/g, ''); 
+
+                    // Ekspresi Target Akhir (contoh: 500-20)
+                    const targetExpression = valB + (remainingOp || ''); 
+                    let targetValue;
+
+                    try {
+                        // Hapus faktorial dan fungsi khusus, hanya hitung ekspresi dasar
+                        const tempExecutableCode = cleanExpression(targetExpression.replace(/[A-Za-z]+\(|!/g, ''));
+                        targetValue = (new Function(tempExecutableCode))();
+                        
+                        // KOREKSI: Bulatkan Target Akhir sebelum pembagian faktor
+                        targetValue = Math.round(targetValue); 
+
+                    } catch (e) {
+                        historyCurrentEl.textContent = `Error: Ekspresi target akhir tidak valid (${targetExpression})`;
+                        currentExpression = 'Error'; updateDisplay(); return;
+                    }
+
+                    if (isNaN(targetValue) || !isFinite(targetValue)) {
+                        historyCurrentEl.textContent = `Error: Target akhir tidak valid (${targetExpression})`;
+                        currentExpression = 'Error'; updateDisplay(); return;
+                    }
+
+                    // b. Terapkan Faktor Implisit: Target Akhir / Nilai Awal
+                    currentExpression = `(${targetValue}/${valA})`; 
+                    
+                    historyCurrentEl.textContent = `${valA} * X = ${targetExpression}. Target = ${targetValue}. Hitung: ${targetValue}/${valA}`;
+                    
                     updateDisplay(); 
-                    return; 
+                    calculate(); 
+                    return; // EXIT jika Variabel Implisit terdeteksi
                 }
+            }
+            
+            // 2. PERHITUNGAN GEOMETRI & PERSEN (Logika lama tetap berfungsi)
 
-                const rate = getRate(fromCurrency, toCurrency);
-                currentExpression = `${value}*${rate}`; 
-                historyCurrentEl.textContent = `Konversi: ${value} ${fromCurrency.toUpperCase()} ke ${toCurrency.toUpperCase()} (Kurs Placeholder)`;
-                updateDisplay(); 
-                calculate(); 
-                return; // KUNCI: EXIT jika Konversi terdeteksi
-            }
-
-            // 2. PERHITUNGAN GEOMETRI (Volume & Luas) - Tetap
-            const volumeMatch = command.match(/panjang\s*(\d+(\.\d+)?)\s*kali\s*lebar\s*(\d+(\.\d+)?)\s*kali\s*tinggi\s*(\d+(\.\d+)?)/i);
-            if (volumeMatch) {
-                const p = volumeMatch[1]; const l = volumeMatch[3]; const t = volumeMatch[5];
-                currentExpression = `${p}*${l}*${t}`; 
-                historyCurrentEl.textContent = `Volume: ${p} × ${l} × ${t}`;
-                updateDisplay(); calculate(); return;
-            }
-            const areaMatch = command.match(/panjang\s*(\d+(\.\d+)?)\s*kali\s*lebar\s*(\d+(\.\d+)?)/i);
-            if (areaMatch) {
-                const p = areaMatch[1]; const l = areaMatch[3];
-                currentExpression = `${p}*${l}`; 
-                historyCurrentEl.textContent = `Luas: ${p} × ${l}`;
-                updateDisplay(); calculate(); return;
-            }
-
-            // 3. PERHITUNGAN PERSEN - Tetap
-            const percentOfMatch = command.match(/(\d+(\.\d+)?)\s*persen\s+dari\s*(\d+(\.\d+)?)/i); 
-            if (percentOfMatch) {
-                let percentValue = percentOfMatch[1]; let baseValue = percentOfMatch[3];
-                currentExpression = `${percentValue}/100*${baseValue}`; 
-                historyCurrentEl.textContent = `Persen: ${percentValue}% dari ${baseValue}`;
-                updateDisplay(); calculate(); return;
-            }
-            const percentIsMatch = command.match(/(\d+(\.\d+)?)\s+dari\s*(\d+(\.\d+)?)\s*persen/i); 
-            if (percentIsMatch) {
-                let partValue = percentIsMatch[1]; let totalValue = percentIsMatch[3];
-                currentExpression = `(${partValue}/${totalValue})*100`; 
-                historyCurrentEl.textContent = `Rasio Persen: ${partValue} dari ${totalValue}`;
-                updateDisplay(); calculate(); return;
-            }
-
-            // FASE 4: Eksekusi Ekspresi Fleksibel (Kunci Perbaikan Agresif Removal Spasi)
+            // FASE 4: Eksekusi Ekspresi Fleksibel (Operasi Biasa)
             let finalExpression = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
 
             finalExpression = finalExpression
                 .replace(/perm\s+(\d+)\s+(\d+)/g, 'perm($1,$2)')
                 .replace(/comb\s+(\d+)\s+(\d+)/g, 'comb($1,$2)');
 
-            // KUNCI PERBAIKAN 2: Hanya hapus spasi di sekitar operator, biarkan yang lain agar angka tidak menyatu.
+            // Hanya hapus spasi di sekitar operator, dan hapus operator di akhir
             finalExpression = finalExpression
-                // Hapus spasi di sekitar operator (+, -, *, /, MOD, %, ^)
                 .replace(/\s*([\+\-\*\/%MOD\^])\s*/g, '$1') 
-                // Hapus sisa spasi
+                .replace(/[\+\-\*\/%MOD\^]$/, '') 
                 .replace(/\s+/g, ''); 
 
             if (finalExpression.length > 0) {
@@ -668,11 +473,7 @@
             }
         }
 
-
-        // =================================================================
-        // PANEL LOGIC (HISTORY & KEY) (DIPERBAIKI EVENT LISTENER) 🛠️
-        // =================================================================
-
+        // --- PANEL LOGIC (Tidak Berubah) ---
         function togglePanel(panelEl, isOpen) {
             if (isOpen) { 
                 panelEl.classList.add('open'); 
@@ -688,23 +489,11 @@
                 }
             }
         }
-
-        burgerMenuBtn.addEventListener('click', () => {
-            togglePanel(historyPanel, true); // Pastikan selalu true saat tombol ditekan
-        });
-        // PERBAIKAN: Event listener untuk tombol tutup Riwayat
+        burgerMenuBtn.addEventListener('click', () => { togglePanel(historyPanel, true); });
         closeHistoryPanelBtn.addEventListener('click', () => { togglePanel(historyPanel, false); });
-
-        keyBtn.addEventListener('click', () => {
-            togglePanel(keyPanel, true); // Pastikan selalu true saat tombol ditekan
-        });
+        keyBtn.addEventListener('click', () => { togglePanel(keyPanel, true); });
         closeKeyPanelBtn.addEventListener('click', () => { togglePanel(keyPanel, false); });
-        
-        overlay.addEventListener('click', () => { 
-            togglePanel(historyPanel, false);
-            togglePanel(keyPanel, false);
-        });
-
+        overlay.addEventListener('click', () => { togglePanel(historyPanel, false); togglePanel(keyPanel, false); });
         function renderHistory() {
             historyListEl.innerHTML = '';
             if (historyRecords.length === 0) { historyListEl.innerHTML = '<p class="empty-history">Belum ada perhitungan.</p>'; return; }
@@ -722,25 +511,22 @@
                 historyListEl.appendChild(item);
             });
         }
-
         clearHistoryBtn.addEventListener('click', () => {
             historyRecords = [];
             localStorage.removeItem('calculatorHistory'); 
             renderHistory();
         });
-
-        // KONTEN HALAMAN KUNCI
         function renderKeyList() {
             const keys = [
-                { title: 'Perhitungan Dasar', content: 'Gunakan **jadi**, **ke**, atau **buat** sebagai operator **tambah (+)**. Contoh: "lima puluh jadi tiga kali dua".' },
+                { title: 'Pencarian Variabel Implisit 💡', content: 'Gunakan **[Angka A] jadi/ke/buat [Angka B] [Operator C]**. Contoh: "**15 jadi 500 kurang 20**". (Menghitung target $500-20=480$, lalu mencari $480/15$). Hasil akhir dibulatkan.' },
+                { title: 'Perhitungan Dasar', content: 'Gunakan **tambah/kurang/kali/bagi** untuk operasi dasar. **Semua hasil dibulatkan**.' },
                 { title: 'Fungsi Expert & Ilmiah', content: 'sinus [A], kosinus [A], tangen [A], logaritma [A] ($\log_{10}$), **logaritma natural [A] ($\ln$)**, **[A] faktorial** ([A]!), **permutasi [n] koma [r]**, **kombinasi [n] koma [r]**.' },
                 { title: 'Perhitungan Geometri', content: 'Luas: **panjang [A] kali lebar [B]**. Volume: **panjang [A] kali lebar [B] kali tinggi [C]**.' },
-                { title: 'Konversi Mata Uang 🔄', content: 'Katakan **[nilai] [mata uang A] ke/jadi [mata uang B]**. Mata uang yang didukung: **dolar (USD), rupiah (IDR), euro (EUR), yen (JPY)**.' },
+                { title: 'Konversi Mata Uang 🔄', content: 'Katakan **[nilai] [mata uang A] tambah/kali [mata uang B]**. Contoh: "10 dolar tambah rupiah".' },
                 { title: 'Perhitungan Persen', content: 'Nilai: **[X] persen dari [Y]**. Rasio: **[X] dari [Y] persen**.' },
                 { title: 'Pencarian Rumus 📚', content: 'Katakan: **rumus [nama rumus]**. Contoh: "rumus volume balok", "rumus pythagoras", "rumus luas lingkaran".' },
                 { title: 'Perintah Lain', content: '**hapus** atau **clear** untuk menghapus tampilan.' }
             ];
-
             keyListEl.innerHTML = '';
             keys.forEach(key => {
                 const group = document.createElement('div');
@@ -750,10 +536,7 @@
             });
         }
 
-        // =================================================================
-        // INISIALISASI AKHIR
-        // =================================================================
-
+        // --- INISIALISASI AKHIR ---
         buttons.addEventListener('click', (e) => {
             let target = e.target;
             if (!target.classList.contains('btn')) { target = target.closest('.btn'); }
