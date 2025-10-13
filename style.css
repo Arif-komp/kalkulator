@@ -9,7 +9,7 @@
     --scientific-color: #5c6bc0; /* Indigo */
     --history-bg: #f5f7fa;
     --history-width: 350px; 
-    --calc-max-width: 400px; /* Lebar dikembalikan untuk 4 kolom */
+    --calc-max-width: 400px; /* Lebar optimal untuk 4 kolom */
     --padding-base: 20px; 
 }
 
@@ -44,7 +44,7 @@ body {
 /* --- Tombol Kalkulator (Grid) --- */
 .buttons {
     display: grid;
-    /* KUNCI PERUBAHAN: Kembali ke 4 kolom */
+    /* Mengatur ke 4 kolom */
     grid-template-columns: repeat(4, 1fr); 
     gap: 10px; 
 }
@@ -61,27 +61,26 @@ body {
     min-height: 50px; 
 }
 
-/* Sensitivitas: Tombol ditekan */
+/* Efek tombol ditekan */
 .btn:active {
     transform: translateY(0.5px); 
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); 
     filter: brightness(0.95); 
 }
 
-/* Penyesuaian Grid untuk BARIS TERAKHIR (agar 0 memanjang) */
-
-/* Catatan: Karena kita menggunakan alur grid, kita hanya perlu mengatur tombol yang ukurannya berbeda */
-
+/* Penyesuaian Grid untuk BARIS TERAKHIR */
+/* Tombol 0 memanjang dari kolom 2 ke kolom 3 */
 .buttons button[data-value="0"] { 
-    grid-column: 2 / span 2; /* Memanjang dari kolom 2 ke 3 */
+    grid-column: 2 / span 2; 
     grid-row: 8;
 } 
+/* Tombol titik dan sama dengan kembali ke posisi 1 kolom */
 .buttons button[data-value="."]{ 
-    grid-column: 1; /* Di kolom 1 */
+    grid-column: 1; 
     grid-row: 8;
 }
 .buttons button[data-value="="] { 
-    grid-column: 4; /* Di kolom 4 */
+    grid-column: 4; 
     grid-row: 8;
 }
 
@@ -92,7 +91,6 @@ body {
 .sci { background-color: var(--scientific-color); color: white; font-size: 1em; font-weight: 500; box-shadow: 0 2px 4px rgba(92, 107, 192, 0.4); }
 .eq { background-color: var(--primary-color); font-size: 1.6em; }
 
-/* Menyesuaikan tombol x^2 */
 .buttons button[data-value="^2"] {
     font-size: 1.1em;
 }
@@ -115,13 +113,12 @@ body {
     overflow-x: auto; 
     white-space: nowrap; 
     line-height: 1.2; 
-    /* Teks sekarang jelas dan akan terpotong/scroll ke kiri */
 }
 .result::-webkit-scrollbar { height: 6px; }
 .result::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
 .result::-webkit-scrollbar-track { background: transparent; }
 
-/* --- Riwayat dan Overlay (Tidak Berubah) --- */
+/* --- Riwayat dan Overlay (Dibiarkan) --- */
 .history-panel { position: fixed; top: 0; right: 0; height: 100%; width: var(--history-width); background-color: var(--history-bg); box-shadow: -8px 0 20px rgba(0, 0, 0, 0.3); transform: translateX(100%); transition: transform 0.3s ease-in-out; padding: var(--padding-base); z-index: 1000; display: flex; flex-direction: column; }
 .history-panel.open { transform: translateX(0); }
 .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -148,7 +145,6 @@ body {
     .calculator {
         padding: 15px;
     }
-    
     .buttons {
         gap: 8px; 
     }
