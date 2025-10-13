@@ -234,7 +234,7 @@
             resultEl.scrollLeft = 0; 
         }
         
-        // FUNGSI INTI PERHITUNGAN (DIBULATKAN UNIVERSAL)
+        // FUNGSI INTI PERHITUNGAN (TIDAK DIBULATKAN - MENGHASILKAN DESIMAL)
         function calculate() {
             let expressionToCalculate = currentExpression;
             if (expressionToCalculate === '0' || expressionToCalculate === 'Error') return;
@@ -245,10 +245,8 @@
                 
                 if (!isFinite(calculatedResult)) throw new Error("Invalid Calculation");
 
-                // --- KOREKSI: Bulatkan hasil akhir universal ---
+                // Mempertahankan desimal
                 calculatedResult = parseFloat(calculatedResult.toFixed(10)); 
-                calculatedResult = Math.round(calculatedResult); // <--- PEMBULATAN KE BILANGAN BULAT TERDEKAT
-                // ---------------------------------------------
 
                 let formattedResult = String(calculatedResult);
                 addToHistory(expressionToCalculate, formattedResult, null, calculatedResult);
@@ -293,7 +291,7 @@
                 let calculatedResult = (new Function(executableCode))();
                 if (!isFinite(calculatedResult)) { historyCurrentEl.textContent = 'Invalid Input'; return; }
                 calculatedResult = parseFloat(calculatedResult.toFixed(10)); 
-                let formattedResult = String(Math.round(calculatedResult)); // Pembulatan untuk Preview
+                let formattedResult = String(calculatedResult);
                 historyCurrentEl.textContent = ' = ' + formattedResult;
             } catch (error) {
                 historyCurrentEl.textContent = expressionToCalculate + '...'; 
@@ -400,8 +398,7 @@
             
             // FASE 3: Logika Khusus (Pencarian Variabel, Konversi, Geometri, Persen)
 
-            // 1. PENCARIAN VARIABEL IMPLISIT (LOGIKA PERMINTAAN BARU)
-            // Pola: [Angka A] [spasi] [Angka B] [Operator C...] (Contoh: "15 buat 500 kurang 20")
+            // 1. PENCARIAN VARIABEL IMPLISIT (LOGIKA FORMAT KHUSUS)
             const implicitMatch = expression.match(/^(\d+(\.\d+)?)\s+(\d+(\.\d+)?)\s*(.*)/);
             if (implicitMatch) {
                 const valA = parseFloat(implicitMatch[1]); // Nilai awal (15)
@@ -410,7 +407,7 @@
 
                 if (!isNaN(valA) && !isNaN(valB) && valA !== 0) {
                     
-                    // a. Bersihkan sisa operator dan gabungkan dengan Angka B untuk mendapatkan Target Akhir.
+                    // a. Hitung Target Akhir
                     remainingOp = remainingOp.trim()
                         .replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-')
                         .replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/')
@@ -418,18 +415,13 @@
                         .replace(/[\+\-\*\/%MOD\^]$/, '')
                         .replace(/\s+/g, ''); 
 
-                    // Ekspresi Target Akhir (contoh: 500-20)
                     const targetExpression = valB + (remainingOp || ''); 
                     let targetValue;
 
                     try {
-                        // Hapus faktorial dan fungsi khusus, hanya hitung ekspresi dasar
                         const tempExecutableCode = cleanExpression(targetExpression.replace(/[A-Za-z]+\(|!/g, ''));
                         targetValue = (new Function(tempExecutableCode))();
-                        
-                        // KOREKSI: Bulatkan Target Akhir sebelum pembagian faktor
-                        targetValue = Math.round(targetValue); 
-
+                        targetValue = parseFloat(targetValue.toFixed(10));
                     } catch (e) {
                         historyCurrentEl.textContent = `Error: Ekspresi target akhir tidak valid (${targetExpression})`;
                         currentExpression = 'Error'; updateDisplay(); return;
@@ -439,20 +431,45 @@
                         historyCurrentEl.textContent = `Error: Target akhir tidak valid (${targetExpression})`;
                         currentExpression = 'Error'; updateDisplay(); return;
                     }
+                    
+                    // b. Terapkan Logika Format Khusus (Pembagian dan Sisa)
+                    
+                    // X (faktor bulat)
+                    const factorX = Math.floor(targetValue / valA); 
+                    
+                    // Sisa (target - (faktor * awal))
+                    const remainder = targetValue - (valA * factorX); 
+                    
+                    let resultDisplay;
+                    let finalCalculation;
+                    
+                    if (remainder === 0) {
+                        // Kasus 1: Habis dibagi (contoh 15 ke 480 -> 15 * 32)
+                        resultDisplay = `${valA} × ${factorX}`;
+                        finalCalculation = `${valA * factorX}`;
+                    } else if (remainder > 0) {
+                        // Kasus 2: Sisa positif (contoh 15 ke 500 -> 15 * 33 + 5)
+                        resultDisplay = `${valA} × ${factorX} + ${remainder}`;
+                        finalCalculation = `${(valA * factorX) + remainder}`;
+                    } else { 
+                        // Kasus 3: Sisa negatif (tidak mungkin jika pakai Math.floor, tapi untuk jaga-jaga)
+                        resultDisplay = `${valA} × ${factorX} - ${Math.abs(remainder)}`;
+                        finalCalculation = `${(valA * factorX) + remainder}`;
+                    }
 
-                    // b. Terapkan Faktor Implisit: Target Akhir / Nilai Awal
-                    currentExpression = `(${targetValue}/${valA})`; 
+                    // Set tampilan dan sejarah
+                    currentExpression = finalCalculation; // Ekspresi yang dieksekusi adalah hasil akhirnya
                     
-                    historyCurrentEl.textContent = `${valA} * X = ${targetExpression}. Target = ${targetValue}. Hitung: ${targetValue}/${valA}`;
+                    // Catatan Sejarah: Menampilkan format yang diminta
+                    historyCurrentEl.textContent = `${valA} ke ${targetExpression}. Dihitung sebagai: ${resultDisplay} =`;
                     
+                    lastResult = parseFloat(finalCalculation); // Simpan hasil akhir
                     updateDisplay(); 
-                    calculate(); 
-                    return; // EXIT jika Variabel Implisit terdeteksi
+                    addToHistory(`${valA} ke ${targetExpression}`, finalCalculation, null, finalCalculation); // Tambahkan ke sejarah
+                    return; // EXIT
                 }
             }
             
-            // 2. PERHITUNGAN GEOMETRI & PERSEN (Logika lama tetap berfungsi)
-
             // FASE 4: Eksekusi Ekspresi Fleksibel (Operasi Biasa)
             let finalExpression = expression.replace(/tolong hitung|hitung|adalah/g, '').trim();
 
@@ -500,9 +517,11 @@
             historyRecords.slice().reverse().forEach((record) => {
                 const item = document.createElement('div');
                 item.classList.add('history-item');
+                // Menampilkan ekspresi asli (jika ada format khusus, itu yang disimpannya)
                 item.innerHTML = `<div class="history-expression">${record.expression} =</div><div class="history-result">${record.result}</div>`;
                 item.addEventListener('click', () => {
-                    currentExpression = String(record.result); 
+                    // Saat dipanggil dari history, kembalikan ke nilai numerik murni
+                    currentExpression = String(record.originalResult); 
                     historyCurrentEl.textContent = record.expression + ' =';
                     lastResult = parseFloat(record.originalResult);
                     updateDisplay();
@@ -518,8 +537,8 @@
         });
         function renderKeyList() {
             const keys = [
-                { title: 'Pencarian Variabel Implisit 💡', content: 'Gunakan **[Angka A] jadi/ke/buat [Angka B] [Operator C]**. Contoh: "**15 jadi 500 kurang 20**". (Menghitung target $500-20=480$, lalu mencari $480/15$). Hasil akhir dibulatkan.' },
-                { title: 'Perhitungan Dasar', content: 'Gunakan **tambah/kurang/kali/bagi** untuk operasi dasar. **Semua hasil dibulatkan**.' },
+                { title: 'Pencarian Variabel Implisit 💡 (Format Khusus)', content: 'Gunakan **[Angka A] jadi/ke/buat [Angka B] [Operator C]**. Contoh: "**15 buat 500 kurang 20**". (Menghitung $15 \\times X + Sisa = 480$, format output: **$15 \\times 32$**).' },
+                { title: 'Perhitungan Dasar', content: 'Gunakan **tambah/kurang/kali/bagi** untuk operasi dasar. Hasil bisa desimal.' },
                 { title: 'Fungsi Expert & Ilmiah', content: 'sinus [A], kosinus [A], tangen [A], logaritma [A] ($\log_{10}$), **logaritma natural [A] ($\ln$)**, **[A] faktorial** ([A]!), **permutasi [n] koma [r]**, **kombinasi [n] koma [r]**.' },
                 { title: 'Perhitungan Geometri', content: 'Luas: **panjang [A] kali lebar [B]**. Volume: **panjang [A] kali lebar [B] kali tinggi [C]**.' },
                 { title: 'Konversi Mata Uang 🔄', content: 'Katakan **[nilai] [mata uang A] tambah/kali [mata uang B]**. Contoh: "10 dolar tambah rupiah".' },
