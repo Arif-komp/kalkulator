@@ -63,6 +63,7 @@ function cleanExpression(expression) {
         .replace(/×/g, '*')
         .replace(/MOD/g, '%')
         .replace(/\^/g, '**')
+        .replace(/%/g, '/100') // <-- LOGIKA BARU UNTUK PERSEN
         .replace(/sin\(/g, 'Math.sin(')
         .replace(/cos\(/g, 'Math.cos(')
         .replace(/tan\(/g, 'Math.tan(')
@@ -71,7 +72,8 @@ function cleanExpression(expression) {
         .replace(/pi/g, 'Math.PI')
         .replace(/e/g, 'Math.E');
 
-    cleaned = cleaned.replace(/(\d+(\.\d+)?)!/g, (match, p1) => `factorial(${p1})`);
+    // Baris ini tidak digunakan lagi karena n! dihapus, tapi dibiarkan sebagai catatan:
+    // cleaned = cleaned.replace(/(\d+(\.\d+)?)!/g, (match, p1) => `factorial(${p1})`);
     
     return cleaned;
 }
@@ -79,9 +81,6 @@ function cleanExpression(expression) {
 function updateDisplay() {
     resultEl.textContent = currentExpression;
     resultEl.style.fontSize = currentExpression.length > 15 ? '2em' : '3.5em';
-    
-    // ⭐ PERBAIKAN: Menghapus kode scroll karena direction:rtl sudah dihapus, 
-    // dan membiarkan browser menangani overflow default (terpotong di kiri).
 }
 
 function previewCalculation() {
@@ -198,7 +197,7 @@ function addToHistory(expression, result, combination = null, originalResult = n
 
 function handleButton(value) {
     
-    if (value === 'clear') {
+    if (value === 'clear') { // Tetap 'clear' karena fungsi tombolnya sama (AC)
         currentExpression = '0';
         historyCurrentEl.textContent = '';
         lastResult = null;
@@ -208,6 +207,14 @@ function handleButton(value) {
     } else if (value === '=') {
         calculate();
         return;
+    
+    } else if (value === '%') { // LOGIKA BARU UNTUK PERSEN
+        if (/[0-9)]$/.test(currentExpression.slice(-1))) { 
+            currentExpression += '%'; 
+        } else {
+            // Jika input terakhir bukan angka, abaikan tombol %
+            return;
+        }
 
     } else if (value === 'backspace') {
         if (currentExpression === 'Error') { currentExpression = '0'; } 
@@ -221,11 +228,8 @@ function handleButton(value) {
         previewCalculation();
         return;
 
-    } else if (value === 'fact') {
-          if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '!'; }
-    
-    } else if (value === '^2') { // <--- PENANGANAN BARU UNTUK X²
-          if (/[0-9)]/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
+    } else if (value === '^2') { 
+          if (/[0-9)]$/.test(currentExpression.slice(-1))) { currentExpression += '^2'; }
           else if (currentExpression === 'Error' || currentExpression === '0') { currentExpression = '0^2'; }
           else { currentExpression += '0^2'; }
           
@@ -250,7 +254,7 @@ function handleButton(value) {
 }
 
 // =================================================================
-// LOGIKA RIWAYAT, MENU, DAN SUARA (Tidak Berubah)
+// LOGIKA RIWAYAT, MENU, DAN SUARA (Sama)
 // =================================================================
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
@@ -270,7 +274,8 @@ function processVoiceCommand(command) {
     historyCurrentEl.textContent = 'Perintah Suara: ' + command;
     let expression = command;
     
-    expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(').replace(/pangkat/g, '^').replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(').replace(/logaritma/g, 'log(').replace(/faktorial/g, '!').replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-').replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/').replace(/modulus|modulo|sisa bagi/g, ' MOD ');
+    expression = expression.replace(/akar kuadrat|akar/g, 'sqrt(').replace(/pangkat/g, '^').replace(/sinus/g, 'sin(').replace(/kosinus/g, 'cos(').replace(/tangen/g, 'tan(').replace(/logaritma/g, 'log(').replace(/faktorial/g, '!').replace(/tambah|plus/g, '+').replace(/kurang|minus|kurangi/g, '-').replace(/kali|dikali|perkalian|x/g, '*').replace(/bagi|dibagi|per/g, '/').replace(/modulus|modulo|sisa bagi/g, ' MOD ').replace(/persen/g, '%');
+
     expression = expression.replace(/satu/g, '1').replace(/dua/g, '2').replace(/tiga/g, '3').replace(/empat/g, '4').replace(/lima/g, '5').replace(/enam/g, '6').replace(/tujuh/g, '7').replace(/delapan/g, '8').replace(/sembilan/g, '9').replace(/nol|kosong/g, '0').replace(/koma|titik/g, '.');
 
     if (expression.includes('hapus') || expression.includes('clear')) { handleButton('clear'); return; }
