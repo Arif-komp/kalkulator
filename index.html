@@ -31,32 +31,54 @@
         .eq { background-color: var(--primary-color); font-size: 1.4em; } 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px; }
         .header > div { display: flex; gap: 10px; } 
-        .burger-menu, .mic-button, .key-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
-        .mic-button span.material-icons, .key-button span.material-icons { font-size: 1.6em; }
+        /* Halaman Kunci Dihilangkan */
+        .burger-menu, .mic-button { background: none; border: none; cursor: pointer; color: var(--primary-dark); padding: 5px; z-index: 1001; transition: color 0.2s; }
+        .mic-button span.material-icons { font-size: 1.6em; }
         .title { color: var(--primary-color); font-size: 1.8em; font-weight: 800; letter-spacing: 2px; margin: 0; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         .overlay.active { opacity: 1; visibility: visible; }
         .panel { position: fixed; top: 0; width: var(--history-width); max-width: 80%; height: 100%; background: var(--history-bg); z-index: 1000; box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); transition: transform 0.3s; display: flex; flex-direction: column; }
         #historyPanel { left: 0; transform: translateX(-100%); }
-        #keyPanel { right: 0; left: auto; transform: translateX(100%); }
         .panel.open { transform: translateX(0); }
         .panel-header { padding: var(--padding-base); background-color: var(--card-color); border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        #historyPanel .panel-header > div { display: flex; gap: 10px; } 
         .panel-header h2 { margin: 0; font-size: 1.2em; color: var(--text-color); }
         .panel-header button { background: none; border: none; cursor: pointer; color: #f44336; padding: 5px; }
-        .panel-content { padding: var(--padding-base); flex-grow: 1; overflow-y: auto; }
-        .history-item, .key-group { padding: 10px; margin-bottom: 10px; background: var(--card-color); border-radius: 8px; cursor: pointer; transition: background 0.2s; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
-        .history-item:hover { background: #f0f0f0; }
-        .key-group { cursor: default; } 
-        .key-group h3 { margin-top: 0; margin-bottom: 5px; color: var(--primary-dark); font-size: 1.1em; }
-        .key-group p { margin: 0; font-size: 0.9em; color: #555; line-height: 1.4; }
-        .empty-history { color: #999; text-align: center; margin-top: 20px; } 
+        .panel-content { padding: 0; flex-grow: 1; overflow-y: auto; } /* Padding dihilangkan dari konten */
+        
+        /* RIWAYAT BARU YANG RAPI */
+        .history-item { 
+            padding: 15px var(--padding-base); /* Padding lebih lebar */
+            border-bottom: 1px solid #ddd;
+            cursor: pointer; 
+            transition: background 0.2s; 
+        }
+        .history-item:hover { background: #e6e9ee; }
+        .history-item:last-child { border-bottom: none; }
+        .history-expression { 
+            font-size: 0.9em; 
+            color: #777; 
+            overflow-wrap: break-word; /* Memastikan teks panjang tidak merusak layout */
+            direction: ltr;
+            text-align: right;
+            min-height: 1.2em;
+        }
+        .history-result { 
+            font-size: 1.5em; 
+            font-weight: 500; 
+            color: var(--text-color); 
+            margin-top: 2px;
+            direction: ltr;
+            text-align: right;
+        }
+        .empty-history { color: #999; text-align: center; padding: 20px; } 
+        
         @media (max-width: 550px) {
             body { align-items: flex-start; }
             .main-container { border-radius: 0; box-shadow: none; min-height: 100vh; max-width: none; }
             .calculator { padding: 15px; }
             .buttons { gap: 6px; } 
             .btn { min-height: 45px; } 
+            .history-item { padding: 15px 15px; } 
         }
     </style>
 </head>
@@ -65,7 +87,7 @@
     
     <div class="panel" id="historyPanel">
         <div class="panel-header">
-            <h2>Riwayat Perhitungan</h2>
+            <h2>Riwayat Perhitungan 🧾</h2>
             <div>
                 <button id="clearHistoryBtn" title="Hapus Semua Riwayat">
                     <span class="material-icons">delete</span>
@@ -80,18 +102,6 @@
         </div>
     </div>
     
-    <div class="panel" id="keyPanel">
-        <div class="panel-header">
-            <h2>Kunci Perintah Suara 🗝️</h2>
-            <button id="closeKeyPanelBtn" title="Tutup">
-                <span class="material-icons">close</span>
-            </button>
-        </div>
-        <div id="keyList" class="panel-content">
-            </div>
-    </div>
-
-    
     <div class="main-container">
         <div class="calculator">
             
@@ -101,9 +111,6 @@
                 </button>
                 <h1 class="title">Ayiipp</h1>
                 <div>
-                    <button id="keyBtn" class="key-button" title="Daftar Kata Kunci">
-                        <span class="material-icons">vpn_key</span>
-                    </button>
                     <button id="micBtn" class="mic-button" title="Input Suara">
                         <span class="material-icons">mic</span>
                     </button>
@@ -174,11 +181,7 @@
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         const burgerMenuBtn = document.getElementById('burgerMenu');
         const historyPanel = document.getElementById('historyPanel');
-        const keyBtn = document.getElementById('keyBtn');
-        const keyPanel = document.getElementById('keyPanel');
-        const closeKeyPanelBtn = document.getElementById('closeKeyPanelBtn');
         const overlay = document.getElementById('overlay');
-        const keyListEl = document.getElementById('keyList');
         const closeHistoryPanelBtn = document.getElementById('closeHistoryPanelBtn');
 
 
@@ -278,16 +281,14 @@
         }
         function saveHistory() { localStorage.setItem('calculatorHistory', JSON.stringify(historyRecords)); }
         
-        // PERBAIKAN PENTING: Menambahkan pengecekan duplikat untuk mencegah pengulangan data.
         function addToHistory(expression, result, combination = null, originalResult = null) {
             if (expression !== 'Error' && expression !== '0') {
                 const lastRecord = historyRecords[historyRecords.length - 1];
-                // Cek duplikat data dengan yang terakhir disimpan
                 if (lastRecord && lastRecord.expression === expression && lastRecord.result === result) return;
                 
                 historyRecords.push({ expression: expression, result: result, combination: combination, originalResult: originalResult || result });
                 saveHistory(); 
-                renderHistory(); // Pastikan render dipanggil segera
+                renderHistory(); 
             }
         }
         function previewCalculation() {
@@ -410,9 +411,9 @@
             // 1. PENCARIAN VARIABEL IMPLISIT (LOGIKA FORMAT KHUSUS)
             const implicitMatch = expression.match(/^(\d+(\.\d+)?)\s+(\d+(\.\d+)?)\s*(.*)/);
             if (implicitMatch) {
-                const valA = parseFloat(implicitMatch[1]); // Nilai awal (15)
-                const valB = parseFloat(implicitMatch[3]); // Nilai target (500)
-                let remainingOp = implicitMatch[5] || ''; // Sisa operator (kurang 20)
+                const valA = parseFloat(implicitMatch[1]); 
+                const valB = parseFloat(implicitMatch[3]); 
+                let remainingOp = implicitMatch[5] || ''; 
 
                 if (!isNaN(valA) && !isNaN(valB) && valA !== 0) {
                     
@@ -462,13 +463,10 @@
 
                     currentExpression = finalCalculation; 
                     
-                    // Catatan Sejarah: Menampilkan format yang diminta
-                    
                     historyCurrentEl.textContent = `${valA} ke ${targetExpression}. Dihitung sebagai: ${resultDisplay} =`;
                     
                     lastResult = parseFloat(finalCalculation); 
                     updateDisplay(); 
-                    // Simpan di history: Ekspresi (format khusus), Hasil (nilai numerik), Nilai asli (nilai numerik)
                     addToHistory(resultDisplay, finalCalculation, null, finalCalculation); 
                     return; // EXIT
                 }
@@ -493,30 +491,24 @@
             }
         }
 
-        // --- PANEL LOGIC PERBAIKAN ---
+        // --- PANEL LOGIC ---
 
         function togglePanel(panelEl, isOpen) {
             if (isOpen) { 
                 panelEl.classList.add('open'); 
                 overlay.classList.add('active'); 
-                const otherPanel = (panelEl.id === 'historyPanel') ? keyPanel : historyPanel;
-                if (otherPanel.classList.contains('open')) {
-                    otherPanel.classList.remove('open');
-                }
             } else { 
                 panelEl.classList.remove('open'); 
-                if (!historyPanel.classList.contains('open') && !keyPanel.classList.contains('open')) {
-                    overlay.classList.remove('active');
-                }
+                overlay.classList.remove('active');
             }
         }
         
         burgerMenuBtn.addEventListener('click', () => { togglePanel(historyPanel, true); });
         closeHistoryPanelBtn.addEventListener('click', () => { togglePanel(historyPanel, false); });
-        keyBtn.addEventListener('click', () => { togglePanel(keyPanel, true); });
-        closeKeyPanelBtn.addEventListener('click', () => { togglePanel(keyPanel, false); });
-        overlay.addEventListener('click', () => { togglePanel(historyPanel, false); togglePanel(keyPanel, false); });
+        // Key button dan panel dihilangkan, jadi event-nya tidak ada.
+        overlay.addEventListener('click', () => { togglePanel(historyPanel, false); });
 
+        // Fungsi renderHistory yang telah dirapikan
         function renderHistory() {
             historyListEl.innerHTML = ''; 
             if (historyRecords.length === 0) { 
@@ -527,6 +519,7 @@
             historyRecords.slice().reverse().forEach((record) => {
                 const item = document.createElement('div');
                 item.classList.add('history-item');
+                // Format lebih rapi: ekspresi di atas kecil, hasil di bawah besar.
                 item.innerHTML = `<div class="history-expression">${record.expression} =</div><div class="history-result">${record.result}</div>`;
                 
                 item.addEventListener('click', () => {
@@ -546,25 +539,8 @@
             renderHistory(); 
         });
 
-        function renderKeyList() {
-            const keys = [
-                { title: 'Pencarian Variabel Implisit 💡 (Format Khusus)', content: 'Gunakan **[Angka A] jadi/ke/buat [Angka B] [Operator C]**. Contoh: "**15 buat 500 kurang 20**". (Menghitung $15 \\times X + Sisa = 480$, format output: **$15 \\times 32$**).' },
-                { title: 'Perhitungan Dasar', content: 'Gunakan **tambah/kurang/kali/bagi** untuk operasi dasar. Hasil bisa desimal.' },
-                { title: 'Fungsi Expert & Ilmiah', content: 'sinus [A], kosinus [A], tangen [A], logaritma [A] ($\log_{10}$), **logaritma natural [A] ($\ln$)**, **[A] faktorial** ([A]!), **permutasi [n] koma [r]**, **kombinasi [n] koma [r]**.' },
-                { title: 'Perhitungan Geometri', content: 'Luas: **panjang [A] kali lebar [B]**. Volume: **panjang [A] kali lebar [B] kali tinggi [C]**.' },
-                { title: 'Konversi Mata Uang 🔄', content: 'Katakan **[nilai] [mata uang A] tambah/kali [mata uang B]**. Contoh: "10 dolar tambah rupiah".' },
-                { title: 'Perhitungan Persen', content: 'Nilai: **[X] persen dari [Y]**. Rasio: **[X] dari [Y] persen**.' },
-                { title: 'Pencarian Rumus 📚', content: 'Katakan: **rumus [nama rumus]**. Contoh: "rumus volume balok", "rumus pythagoras", "rumus luas lingkaran".' },
-                { title: 'Perintah Lain', content: '**hapus** atau **clear** untuk menghapus tampilan.' }
-            ];
-            keyListEl.innerHTML = '';
-            keys.forEach(key => {
-                const group = document.createElement('div');
-                group.classList.add('key-group');
-                group.innerHTML = `<h3>${key.title}</h3><p>${key.content.replace(/\*\*/g, '<b>').replace(/\*\*/g, '</b>')}</p>`;
-                keyListEl.appendChild(group);
-            });
-        }
+        // Halaman Kunci dihilangkan, jadi fungsi renderKeyList juga dihapus
+        // ...
 
         // --- INISIALISASI AKHIR ---
         buttons.addEventListener('click', (e) => {
@@ -577,7 +553,6 @@
         });
 
         loadHistory();
-        renderKeyList(); 
         updateDisplay(); 
     </script>
 </body>
