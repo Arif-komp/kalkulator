@@ -263,7 +263,7 @@
 
                 let formattedResult = String(calculatedResult);
                 
-                // Simpan ekspresi lengkap untuk riwayat
+                // Simpan ekspresi lengkap untuk riwayat (Perhitungan Biasa)
                 addToHistory(expressionToCalculate, formattedResult, null, calculatedResult); 
 
                 historyCurrentEl.textContent = expressionToCalculate + ' =';
@@ -299,7 +299,7 @@
         function addToHistory(expression, result, combination = null, originalResult = null) {
             if (expression !== 'Error' && expression !== '0') {
                 const lastRecord = historyRecords[historyRecords.length - 1];
-                // Jangan simpan jika hasil & ekspresi sama persis dengan yang terakhir
+                // Jangan simpan jika hasil & ekspresi sama persis dengan yang terakhir (Hanya untuk hitungan biasa)
                 if (!combination && lastRecord && lastRecord.expression === expression && lastRecord.result === result) return;
                 
                 historyRecords.push({ expression: expression, result: result, combination: combination, originalResult: originalResult || result });
@@ -488,26 +488,24 @@
 
                     currentExpression = String(targetValue); 
                     
-                    // PERUBAHAN UTAMA UNTUK DISPLAY DI HISTORY CURRENT
+                    // Display di history-current (Layar Utama) tetap berupa pertanyaan agar pengguna tahu apa yang dihitung
                     const historyQuestion = `${valA} di apakan agar bisa mendapatkan ${targetValue}?`;
                     historyCurrentEl.textContent = historyQuestion;
                     
                     lastResult = parseFloat(finalCalculation); 
                     updateDisplay(); 
                     
-                    // SIMPAN: 
-                    // - expression: Langkah lengkap (15 × 33 + 5)
-                    // - result: Hasil akhir (500)
-                    // - combination: Pertanyaan (15 di apakan...) & target (500)
-                    // - originalResult: Hasil akhir (500)
+                    // SIMPAN RIWAYAT (PERUBAHAN UTAMA UNTUK HISTORY PANEL)
+                    // Baris Atas History Panel: Langkah Lengkap (resultExpression)
+                    // Baris Bawah History Panel: Hasil Akhir (finalCalculation)
                     addToHistory(
-                        resultExpression, 
-                        String(targetValue), 
+                        resultExpression, // Baris Atas History Panel (15 x 33 + 5)
+                        String(targetValue), // Baris Bawah History Panel (500)
                         { 
-                            question: historyQuestion, 
+                            question: historyQuestion, // Simpan pertanyaan untuk dimuat kembali
                             target: targetValue,
                         }, 
-                        String(targetValue) 
+                        String(targetValue) // Nilai akhir 
                     ); 
                     return; 
                 }
@@ -561,22 +559,24 @@
                 let resultText = record.result;
                 
                 if (record.combination) {
-                    // Jika dari Solver:
-                    expressionText = record.combination.question; // Baris atas: Pertanyaan (15 di apakan agar...)
-                    resultText = `${record.expression} = ${record.result}`; // Baris bawah: Langkah lengkap dan hasil akhir (15 × 33 + 5 = 500)
+                    // JIKA SOLVER (PERMINTAAN TERAKHIR ANDA):
+                    // Baris Atas: Langkah Lengkap (15 × 33 + 5)
+                    // Baris Bawah: Hasil Akhir (500)
+                    expressionText = record.expression; 
+                    resultText = record.result; 
                 } else {
-                    // Jika Perhitungan Biasa:
-                    // Baris atas: Ekspresi awal (100 × sin(30))
-                    // Baris bawah: Ekspresi lengkap dan hasil akhir (100 × sin(30) = 50)
-                    expressionText = record.expression; // Ekspresi ditampilkan di baris atas
-                    resultText = `${record.expression} = ${record.result}`; // Ekspresi lengkap & hasil ditampilkan di baris bawah
+                    // JIKA PERHITUNGAN BIASA (Standar):
+                    // Baris Atas: Ekspresi Awal (100 × sin(30))
+                    // Baris Bawah: Hasil Akhir (50)
+                    expressionText = record.expression; 
+                    resultText = record.result;
                 }
 
                 item.innerHTML = `<div class="history-expression">${expressionText} =</div><div class="history-result">${resultText}</div>`;
                 
                 item.addEventListener('click', () => {
                     if (record.combination) { 
-                        // Muat hasil akhirnya (500) dan tampilkan pertanyaan di preview
+                        // Muat hasil akhirnya (500) dan tampilkan pertanyaan aslinya di preview
                         currentExpression = String(record.originalResult); 
                         historyCurrentEl.textContent = record.combination.question; 
                     } else { 
